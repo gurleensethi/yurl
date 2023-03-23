@@ -31,11 +31,17 @@ func replaceWithUserInput(s string) (string, error) {
 }
 
 func getUserInput(label string) (string, error) {
+	// When piping output to other programs, we don't want the intput promots to be a part of it.
+	// For example: `yurl Login | jq`, if output is sent to stdin, the input prompts will be part of input
+	// to jq. We don't want that.
 	fmt.Fprintf(os.Stderr, "Enter `%s`: ", label)
+
 	reader := bufio.NewReader(os.Stdin)
+
 	line, _, err := reader.ReadLine()
 	if err != nil {
 		return "", err
 	}
+
 	return string(line), err
 }

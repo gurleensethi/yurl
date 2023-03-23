@@ -42,13 +42,14 @@ func (a *app) BuildCliApp() *cli.App {
 			return a.ParseHTTPYamlFile(c.Context)
 		},
 		Action: func(c *cli.Context) error {
-			if c.Args().Len() > 0 {
-				a.ExecuteRequest(c.Context, c.Args().First(), ExecuteRequestOpts{
-					Verbose: c.Bool("verbose"),
-				})
+			if c.Args().Len() == 0 {
+				fmt.Println("Use `yurl -h` for help")
+				return nil
 			}
 
-			return nil
+			return a.ExecuteRequest(c.Context, c.Args().First(), ExecuteRequestOpts{
+				Verbose: c.Bool("verbose"),
+			})
 		},
 	}
 }
