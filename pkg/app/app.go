@@ -82,12 +82,34 @@ func (a *app) ExecuteRequest(ctx context.Context, name string, opts ExecuteReque
 	request.Name = name
 	request.Sanitize()
 
-	a.executeRequest(ctx, request, opts.Verbose)
+	err := request.Validate(&a.HTTPTemplate)
+	if err != nil {
+		return err
+	}
+
+	// Execute all the pre required requests
+	for _, preRequest := range request.PreRequests {
+		_, _, err := a.executeRequest(ctx, a.HTTPTemplate.Requests[preRequest.Name], opts.Verbose)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, response, err := a.executeRequest(ctx, request, opts.Verbose)
+	if err != nil {
+		return err
+	}
+
+	// When verbose is set executeRequest will print the request and response.
+	// So we need to print it only when verbose is not set.
+	if !opts.Verbose {
+		fmt.Println(string(response.RawBody))
+	}
 
 	return nil
 }
 
-func (a *app) executeRequest(ctx context.Context, request models.HttpRequest, verbose bool) (*http.Request, *http.Response, error) {
+func (a *app) executeRequest(ctx context.Context, request models.HttpRequest, verbose bool) (*http.Request, *models.HttpResponse, error) {
 	replaceJsonBody, err := replaceWithUserInput(request.JsonBody)
 	if err != nil {
 		return nil, nil, err
@@ -120,11 +142,17 @@ func (a *app) executeRequest(ctx context.Context, request models.HttpRequest, ve
 		return nil, nil, err
 	}
 
-	fmt.Println(string(bodyBytes))
+	if verbose {
+		fmt.Println(string(bodyBytes))
+	}
 
-	return httpReq, httpResp, nil
+	return httpReq, &models.HttpResponse{
+		RawResponse: httpResp,
+		RawBody:     bodyBytes,
+	}, nil
 }
 
+// buildRequest builds a http request from the request template
 func (a *app) buildRequest(ctx context.Context, request models.HttpRequest) (*http.Request, error) {
 	request.Sanitize()
 
@@ -164,7 +192,7 @@ func (a *app) logHttpRequest(ctx context.Context, request models.HttpRequest, ht
 }
 
 func (a *app) logHttpResponse(ctx context.Context, request models.HttpRequest, httpResp *http.Response) {
-	c := color.New(color.FgHiBlue)
+	c := color.New(color.FgMagenta)
 
 	c.Println("\n<<< Response")
 	c.Println("------------")

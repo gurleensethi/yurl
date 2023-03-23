@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/gurleensethi/yurl/pkg/app"
@@ -9,6 +10,11 @@ import (
 func main() {
 	err := app.New().BuildCliApp().Run(os.Args)
 	if err != nil {
-		panic(err)
+		if os.Getenv("DEBUG") == "true" {
+			panic(err)
+		}
+
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 }
