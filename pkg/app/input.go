@@ -31,7 +31,7 @@ func replaceWithUserInput(s string) (string, error) {
 }
 
 func getUserInput(label string) (string, error) {
-	fmt.Printf("Enter `%s`: ", label)
+	fmt.Fprintf(os.Stderr, "Enter `%s`: ", label)
 	reader := bufio.NewReader(os.Stdin)
 	line, _, err := reader.ReadLine()
 	if err != nil {
