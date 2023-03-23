@@ -1,4 +1,4 @@
-module github.com/gurleensethi/yrul
+module github.com/gurleensethi/yurl
 
 go 1.20
 

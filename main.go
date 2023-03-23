@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/gurleensethi/yrul/pkg/app"
+	"github.com/gurleensethi/yurl/pkg/app"
 )
 
 func main() {

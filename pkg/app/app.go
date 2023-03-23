@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gurleensethi/yrul/pkg/models"
+	"github.com/gurleensethi/yurl/pkg/models"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v3"
 )
