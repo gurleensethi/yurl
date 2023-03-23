@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/gurleensethi/yurl/pkg/models"
 	"github.com/urfave/cli/v2"
+	"github.com/yalp/jsonpath"
 	"gopkg.in/yaml.v3"
 )
 
@@ -87,15 +89,22 @@ func (a *app) ExecuteRequest(ctx context.Context, name string, opts ExecuteReque
 		return err
 	}
 
+	vars := make(map[string]any)
+
 	// Execute all the pre required requests
 	for _, preRequest := range request.PreRequests {
-		_, _, err := a.executeRequest(ctx, a.HTTPTemplate.Requests[preRequest.Name], opts.Verbose)
+		_, httpResponse, err := a.executeRequest(ctx, a.HTTPTemplate.Requests[preRequest.Name], vars, opts.Verbose)
 		if err != nil {
 			return err
 		}
+
+		// Merge the exports from the pre request to the vars
+		for key, value := range httpResponse.Exports {
+			vars[key] = value
+		}
 	}
 
-	_, response, err := a.executeRequest(ctx, request, opts.Verbose)
+	_, response, err := a.executeRequest(ctx, request, vars, opts.Verbose)
 	if err != nil {
 		return err
 	}
@@ -109,14 +118,8 @@ func (a *app) ExecuteRequest(ctx context.Context, name string, opts ExecuteReque
 	return nil
 }
 
-func (a *app) executeRequest(ctx context.Context, request models.HttpRequest, verbose bool) (*http.Request, *models.HttpResponse, error) {
-	replaceJsonBody, err := replaceWithUserInput(request.JsonBody)
-	if err != nil {
-		return nil, nil, err
-	}
-	request.JsonBody = replaceJsonBody
-
-	httpReq, err := a.buildRequest(ctx, request)
+func (a *app) executeRequest(ctx context.Context, request models.HttpRequest, vars models.Variables, verbose bool) (*http.Request, *models.HttpResponse, error) {
+	httpReq, err := a.buildRequest(ctx, request, vars)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -133,34 +136,64 @@ func (a *app) executeRequest(ctx context.Context, request models.HttpRequest, ve
 
 	defer httpResp.Body.Close()
 
-	if verbose {
-		a.logHttpResponse(ctx, request, httpResp)
-	}
-
 	bodyBytes, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if verbose {
-		fmt.Println(string(bodyBytes))
+	// Parse out exports
+	exports := make(map[string]any)
+
+	for name, export := range request.Exports {
+		if export.JSON != "" {
+			var parsedBody map[string]any
+			err := json.Unmarshal([]byte(bodyBytes), &parsedBody)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			value, err := jsonpath.Read(parsedBody, export.JSON)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			exports[name] = value
+		}
 	}
 
-	return httpReq, &models.HttpResponse{
+	httpResponse := &models.HttpResponse{
 		RawResponse: httpResp,
 		RawBody:     bodyBytes,
-	}, nil
+		Exports:     exports,
+	}
+
+	if verbose {
+		a.logHttpResponse(ctx, request, httpResponse)
+	}
+
+	return httpReq, httpResponse, nil
 }
 
 // buildRequest builds a http request from the request template
-func (a *app) buildRequest(ctx context.Context, request models.HttpRequest) (*http.Request, error) {
+func (a *app) buildRequest(ctx context.Context, request models.HttpRequest, vars models.Variables) (*http.Request, error) {
 	request.Sanitize()
 
+	replacedJsonBody, err := replaceVariables(request.JsonBody, vars)
+	if err != nil {
+		return nil, err
+	}
+	request.JsonBody = replacedJsonBody
+
 	// Prepare request URL
+	replacedPath, err := replaceVariables(request.Path, vars)
+	if err != nil {
+		return nil, err
+	}
+
 	reqURL := url.URL{
 		Scheme: "http",
 		Host:   fmt.Sprintf("%s:%d", a.HTTPTemplate.Config.Host, a.HTTPTemplate.Config.Port),
-		Path:   request.Path,
+		Path:   replacedPath,
 	}
 
 	httpReq, err := http.NewRequest(request.Method, reqURL.String(), strings.NewReader(request.JsonBody))
@@ -173,7 +206,12 @@ func (a *app) buildRequest(ctx context.Context, request models.HttpRequest) (*ht
 	}
 
 	for key, value := range request.Headers {
-		httpReq.Header.Add(key, value)
+		replacedValue, err := replaceVariables(value, vars)
+		if err != nil {
+			return nil, err
+		}
+
+		httpReq.Header.Add(key, replacedValue)
 	}
 
 	return httpReq, nil
@@ -191,13 +229,21 @@ func (a *app) logHttpRequest(ctx context.Context, request models.HttpRequest, ht
 	c.Println(request.JsonBody)
 }
 
-func (a *app) logHttpResponse(ctx context.Context, request models.HttpRequest, httpResp *http.Response) {
+func (a *app) logHttpResponse(ctx context.Context, request models.HttpRequest, httpResponse *models.HttpResponse) {
 	c := color.New(color.FgMagenta)
 
 	c.Println("\n<<< Response")
 	c.Println("------------")
-	c.Println(httpResp.Status)
-	for key, value := range httpResp.Header {
+	c.Println(httpResponse.RawResponse.Status)
+	for key, value := range httpResponse.RawResponse.Header {
 		c.Printf("%s: %s\n", key, strings.Join(value, "; "))
+	}
+	c.Println("\nExports:")
+	c.Println("--------")
+	if len(httpResponse.Exports) == 0 {
+		c.Println("  No exports")
+	}
+	for key, value := range httpResponse.Exports {
+		c.Println("  ", key, ":", value)
 	}
 }

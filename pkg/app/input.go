@@ -6,14 +6,15 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/gurleensethi/yurl/pkg/models"
 )
 
 var (
 	inputRegex = regexp.MustCompile(`{{\s+?([a-zA-Z]+)\s+?}}`)
 )
 
-// replaceWithUserInput replaces all instances of {{ <key> }} with user input.
-func replaceWithUserInput(s string) (string, error) {
+func replaceVariables(s string, vars models.Variables) (string, error) {
 	matches := inputRegex.FindAllStringSubmatch(s, -1)
 	if len(matches) == 0 {
 		return s, nil
@@ -21,6 +22,14 @@ func replaceWithUserInput(s string) (string, error) {
 
 	for _, match := range matches {
 		key := match[1]
+
+		// Check if variable is present in vars
+		if value, ok := vars[key]; ok {
+			s = strings.ReplaceAll(s, match[0], fmt.Sprintf("%v", value))
+			continue
+		}
+
+		// Variable not present in vars, prompt user for input
 		input, err := getUserInput(key)
 		if err != nil {
 			return "", err
