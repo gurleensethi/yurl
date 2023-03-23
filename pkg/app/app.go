@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/gurleensethi/yurl/pkg/models"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v3"
@@ -78,6 +79,53 @@ func (a *app) ExecuteRequest(ctx context.Context, name string, opts ExecuteReque
 		return errors.New("request not found")
 	}
 
+	request.Name = name
+	request.Sanitize()
+
+	a.executeRequest(ctx, request, opts.Verbose)
+
+	return nil
+}
+
+func (a *app) executeRequest(ctx context.Context, request models.HttpRequest, verbose bool) (*http.Request, *http.Response, error) {
+	replaceJsonBody, err := replaceWithUserInput(request.JsonBody)
+	if err != nil {
+		return nil, nil, err
+	}
+	request.JsonBody = replaceJsonBody
+
+	httpReq, err := a.buildRequest(ctx, request)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if verbose {
+		a.logHttpRequest(ctx, request, httpReq)
+	}
+
+	httpClient := http.Client{}
+	httpResp, err := httpClient.Do(httpReq)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defer httpResp.Body.Close()
+
+	if verbose {
+		a.logHttpResponse(ctx, request, httpResp)
+	}
+
+	bodyBytes, err := io.ReadAll(httpResp.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	fmt.Println(string(bodyBytes))
+
+	return httpReq, httpResp, nil
+}
+
+func (a *app) buildRequest(ctx context.Context, request models.HttpRequest) (*http.Request, error) {
 	request.Sanitize()
 
 	// Prepare request URL
@@ -87,15 +135,9 @@ func (a *app) ExecuteRequest(ctx context.Context, name string, opts ExecuteReque
 		Path:   request.Path,
 	}
 
-	// Prepare http request
-	body, err := replaceWithUserInput(request.JsonBody)
+	httpReq, err := http.NewRequest(request.Method, reqURL.String(), strings.NewReader(request.JsonBody))
 	if err != nil {
-		return err
-	}
-
-	httpReq, err := http.NewRequest(request.Method, reqURL.String(), strings.NewReader(body))
-	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if request.JsonBody != "" {
@@ -106,38 +148,28 @@ func (a *app) ExecuteRequest(ctx context.Context, name string, opts ExecuteReque
 		httpReq.Header.Add(key, value)
 	}
 
-	// Execute request
-	if opts.Verbose {
-		fmt.Println("\nRequest\n-------")
-		fmt.Printf("%s %s\n", request.Method, reqURL.String())
-		for headerName, headerValue := range httpReq.Header {
-			fmt.Printf("%s: %s\n", headerName, strings.Join(headerValue, ";"))
-		}
+	return httpReq, nil
+}
+
+func (a *app) logHttpRequest(ctx context.Context, request models.HttpRequest, httpReq *http.Request) {
+	c := color.New(color.FgHiYellow)
+
+	c.Println("\n>>> Request")
+	c.Println("-----------")
+	c.Printf("%s %s\n", request.Method, httpReq.URL.String())
+	for headerName, headerValue := range httpReq.Header {
+		c.Printf("%s: %s\n", headerName, strings.Join(headerValue, ";"))
 	}
+	c.Println(request.JsonBody)
+}
 
-	httpClient := http.Client{}
-	resp, err := httpClient.Do(httpReq)
-	if err != nil {
-		return err
+func (a *app) logHttpResponse(ctx context.Context, request models.HttpRequest, httpResp *http.Response) {
+	c := color.New(color.FgHiBlue)
+
+	c.Println("\n<<< Response")
+	c.Println("------------")
+	c.Println(httpResp.Status)
+	for key, value := range httpResp.Header {
+		c.Printf("%s: %s\n", key, strings.Join(value, "; "))
 	}
-
-	// Print response
-	if opts.Verbose {
-		fmt.Println("\nResponse\n--------")
-		fmt.Println(resp.Status)
-		for key, value := range resp.Header {
-			fmt.Printf("%s: %s\n", key, value)
-		}
-	}
-
-	defer resp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(bodyBytes))
-
-	return nil
 }

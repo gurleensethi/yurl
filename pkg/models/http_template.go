@@ -11,6 +11,7 @@ type Config struct {
 }
 
 type HttpRequest struct {
+	Name     string
 	Method   string            `yaml:"method"`
 	Path     string            `yaml:"path"`
 	JsonBody string            `yaml:"jsonBody"`
