@@ -45,9 +45,19 @@ func (a *app) BuildCliApp() *cli.App {
 				Usage:   "variable to be used in the request. ",
 				Aliases: []string{"var"},
 			},
+			&cli.StringFlag{
+				Name:    "file",
+				Usage:   "path of file to read http requests from",
+				Aliases: []string{"f"},
+			},
 		},
 		Before: func(c *cli.Context) error {
-			return a.ParseHTTPYamlFile(c.Context)
+			filePath := c.String("file")
+			if filePath == "" {
+				filePath = DefaultHTTPYamlFile
+			}
+
+			return a.ParseHTTPYamlFile(c.Context, filePath)
 		},
 		Action: func(c *cli.Context) error {
 			if c.Args().Len() == 0 {
@@ -72,9 +82,12 @@ func (a *app) BuildCliApp() *cli.App {
 	}
 }
 
-func (a *app) ParseHTTPYamlFile(ctx context.Context) error {
-	file, err := os.Open(DefaultHTTPYamlFile)
+func (a *app) ParseHTTPYamlFile(ctx context.Context, filePath string) error {
+	file, err := os.Open(filePath)
 	if err != nil {
+		if err == os.ErrNotExist {
+			return fmt.Errorf("no request file found at %s", filePath)
+		}
 		return err
 	}
 
@@ -259,6 +272,8 @@ func (a *app) logHttpResponse(ctx context.Context, request models.HttpTemplateRe
 	for key, value := range httpResponse.RawResponse.Header {
 		c.Printf("%s: %s\n", key, strings.Join(value, "; "))
 	}
+	c.Println(string(httpResponse.RawBody))
+
 	c.Println("\nExports:")
 	c.Println("--------")
 	if len(httpResponse.Exports) == 0 {
