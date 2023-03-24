@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/fatih/color"
@@ -296,8 +297,20 @@ func (a *app) logHttpResponse(ctx context.Context, request models.HttpTemplateRe
 }
 
 func (a *app) ListRequests(ctx context.Context) error {
-	for name, request := range a.HTTPTemplate.Requests {
-		fmt.Println(name, "\n  ", request.Method, request.Path)
+	keys := make([]string, 0, len(a.HTTPTemplate.Requests))
+	for name := range a.HTTPTemplate.Requests {
+		keys = append(keys, name)
+	}
+
+	sort.Strings(keys)
+
+	fmt.Println()
+
+	for _, key := range keys {
+		request := a.HTTPTemplate.Requests[key]
+		fmt.Println(key)
+		fmt.Println()
+		fmt.Println("  ", request.Method, request.Path)
 		fmt.Println()
 	}
 
