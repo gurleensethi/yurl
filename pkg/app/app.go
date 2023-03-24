@@ -134,14 +134,16 @@ func (a *app) ExecuteRequest(ctx context.Context, name string, opts ExecuteReque
 	return nil
 }
 
-func (a *app) executeRequest(ctx context.Context, request models.HttpRequest, vars models.Variables, verbose bool) (*http.Request, *models.HttpResponse, error) {
-	httpReq, err := a.buildRequest(ctx, request, vars)
+func (a *app) executeRequest(ctx context.Context, requestTemplate models.HttpTemplateRequest, vars models.Variables, verbose bool) (*http.Request, *models.HttpResponse, error) {
+	httpRequest, err := a.buildRequest(ctx, requestTemplate, vars)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	httpReq := httpRequest.RawRequest
+
 	if verbose {
-		a.logHttpRequest(ctx, request, httpReq)
+		a.logHttpRequest(ctx, httpRequest)
 	}
 
 	httpClient := http.Client{}
@@ -160,7 +162,7 @@ func (a *app) executeRequest(ctx context.Context, request models.HttpRequest, va
 	// Parse out exports
 	exports := make(map[string]any)
 
-	for name, export := range request.Exports {
+	for name, export := range requestTemplate.Exports {
 		if export.JSON != "" {
 			var parsedBody map[string]any
 			err := json.Unmarshal([]byte(bodyBytes), &parsedBody)
@@ -184,14 +186,14 @@ func (a *app) executeRequest(ctx context.Context, request models.HttpRequest, va
 	}
 
 	if verbose {
-		a.logHttpResponse(ctx, request, httpResponse)
+		a.logHttpResponse(ctx, requestTemplate, httpResponse)
 	}
 
 	return httpReq, httpResponse, nil
 }
 
 // buildRequest builds a http request from the request template
-func (a *app) buildRequest(ctx context.Context, request models.HttpRequest, vars models.Variables) (*http.Request, error) {
+func (a *app) buildRequest(ctx context.Context, request models.HttpTemplateRequest, vars models.Variables) (*models.HttpRequest, error) {
 	request.Sanitize()
 
 	replacedJsonBody, err := replaceVariables(request.JsonBody, vars)
@@ -230,22 +232,25 @@ func (a *app) buildRequest(ctx context.Context, request models.HttpRequest, vars
 		httpReq.Header.Add(key, replacedValue)
 	}
 
-	return httpReq, nil
+	return &models.HttpRequest{
+		RawRequest: httpReq,
+		Template:   &request,
+	}, nil
 }
 
-func (a *app) logHttpRequest(ctx context.Context, request models.HttpRequest, httpReq *http.Request) {
+func (a *app) logHttpRequest(ctx context.Context, request *models.HttpRequest) {
 	c := color.New(color.FgHiYellow)
 
 	c.Println("\n>>> Request")
 	c.Println("-----------")
-	c.Printf("%s %s\n", request.Method, httpReq.URL.String())
-	for headerName, headerValue := range httpReq.Header {
+	c.Printf("%s %s\n", request.RawRequest.Method, request.RawRequest.URL.String())
+	for headerName, headerValue := range request.RawRequest.Header {
 		c.Printf("%s: %s\n", headerName, strings.Join(headerValue, ";"))
 	}
-	c.Println(request.JsonBody)
+	c.Println(request.Template.JsonBody)
 }
 
-func (a *app) logHttpResponse(ctx context.Context, request models.HttpRequest, httpResponse *models.HttpResponse) {
+func (a *app) logHttpResponse(ctx context.Context, request models.HttpTemplateRequest, httpResponse *models.HttpResponse) {
 	c := color.New(color.FgMagenta)
 
 	c.Println("\n<<< Response")
