@@ -40,6 +40,11 @@ func (a *app) BuildCliApp() *cli.App {
 				Aliases: []string{"v"},
 				Usage:   "verbose output",
 			},
+			&cli.StringSliceFlag{
+				Name:    "variable",
+				Usage:   "variable to be used in the request. ",
+				Aliases: []string{"var"},
+			},
 		},
 		Before: func(c *cli.Context) error {
 			return a.ParseHTTPYamlFile(c.Context)
@@ -50,8 +55,18 @@ func (a *app) BuildCliApp() *cli.App {
 				return nil
 			}
 
+			// Parse variables
+			variables := make(models.Variables)
+			for _, variable := range c.StringSlice("variable") {
+				parts := strings.Split(variable, "=")
+				if len(parts) >= 2 {
+					variables[parts[0]] = strings.Join(parts[1:], "=")
+				}
+			}
+
 			return a.ExecuteRequest(c.Context, c.Args().First(), ExecuteRequestOpts{
-				Verbose: c.Bool("verbose"),
+				Verbose:   c.Bool("verbose"),
+				Variables: variables,
 			})
 		},
 	}
@@ -72,7 +87,8 @@ func (a *app) ParseHTTPYamlFile(ctx context.Context) error {
 }
 
 type ExecuteRequestOpts struct {
-	Verbose bool
+	Verbose   bool
+	Variables models.Variables
 }
 
 func (a *app) ExecuteRequest(ctx context.Context, name string, opts ExecuteRequestOpts) error {
@@ -89,7 +105,7 @@ func (a *app) ExecuteRequest(ctx context.Context, name string, opts ExecuteReque
 		return err
 	}
 
-	vars := make(map[string]any)
+	vars := opts.Variables
 
 	// Execute all the pre required requests
 	for _, preRequest := range request.PreRequests {
