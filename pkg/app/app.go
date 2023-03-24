@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -25,10 +26,13 @@ var (
 
 type app struct {
 	HTTPTemplate models.HttpTemplate
+	FileVars     map[string]any
 }
 
 func New() *app {
-	return &app{}
+	return &app{
+		FileVars: make(map[string]any),
+	}
 }
 
 func (a *app) BuildCliApp() *cli.App {
@@ -45,6 +49,11 @@ func (a *app) BuildCliApp() *cli.App {
 				Name:    "variable",
 				Usage:   "variable to be used in the request. ",
 				Aliases: []string{"var"},
+			},
+			&cli.StringSliceFlag{
+				Name:    "variable-file",
+				Usage:   "loads variables from the given file.",
+				Aliases: []string{"var-file"},
 			},
 			&cli.StringFlag{
 				Name:    "file",
@@ -68,7 +77,19 @@ func (a *app) BuildCliApp() *cli.App {
 				filePath = DefaultHTTPYamlFile
 			}
 
-			return a.ParseHTTPYamlFile(c.Context, filePath)
+			err := a.parseHTTPYamlFile(c.Context, filePath)
+			if err != nil {
+				return err
+			}
+
+			variablesFilePaths := c.StringSlice("variable-file")
+
+			err = a.parseVariablesFromFiles(c.Context, variablesFilePaths)
+			if err != nil {
+				return err
+			}
+
+			return nil
 		},
 		Action: func(c *cli.Context) error {
 			if c.Args().Len() == 0 {
@@ -76,8 +97,9 @@ func (a *app) BuildCliApp() *cli.App {
 				return nil
 			}
 
-			// Parse variables
-			variables := make(models.Variables)
+			variables := a.FileVars
+
+			// Parse variables from command line
 			for _, variable := range c.StringSlice("variable") {
 				parts := strings.Split(variable, "=")
 				if len(parts) >= 2 {
@@ -93,7 +115,7 @@ func (a *app) BuildCliApp() *cli.App {
 	}
 }
 
-func (a *app) ParseHTTPYamlFile(ctx context.Context, filePath string) error {
+func (a *app) parseHTTPYamlFile(ctx context.Context, filePath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		if err == os.ErrNotExist {
@@ -105,6 +127,37 @@ func (a *app) ParseHTTPYamlFile(ctx context.Context, filePath string) error {
 	err = yaml.NewDecoder(file).Decode(&a.HTTPTemplate)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (a *app) parseVariablesFromFiles(ctx context.Context, filePaths []string) error {
+	for _, filePath := range filePaths {
+		file, err := os.Open(filePath)
+		if err != nil {
+			if err == os.ErrNotExist {
+				return fmt.Errorf("no request file found at %s", filePath)
+			}
+			return err
+		}
+
+		reader := bufio.NewReader(file)
+
+		for {
+			lineBytes, _, err := reader.ReadLine()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return err
+			}
+
+			line := string(lineBytes)
+			parts := strings.Split(line, "=")
+			if len(parts) >= 2 {
+				a.FileVars[parts[0]] = strings.Join(parts[1:], "=")
+			}
+		}
 	}
 
 	return nil
