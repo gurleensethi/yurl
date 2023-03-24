@@ -51,6 +51,16 @@ func (a *app) BuildCliApp() *cli.App {
 				Aliases: []string{"f"},
 			},
 		},
+		Commands: []*cli.Command{
+			{
+				Name:    "list-requests",
+				Aliases: []string{"ls"},
+				Usage:   "list all requests in the requests (yaml) file",
+				Action: func(c *cli.Context) error {
+					return a.ListRequests(c.Context)
+				},
+			},
+		},
 		Before: func(c *cli.Context) error {
 			filePath := c.String("file")
 			if filePath == "" {
@@ -209,23 +219,24 @@ func (a *app) executeRequest(ctx context.Context, requestTemplate models.HttpTem
 func (a *app) buildRequest(ctx context.Context, request models.HttpTemplateRequest, vars models.Variables) (*models.HttpRequest, error) {
 	request.Sanitize()
 
-	replacedJsonBody, err := replaceVariables(request.JsonBody, vars)
-	if err != nil {
-		return nil, err
-	}
-	request.JsonBody = replacedJsonBody
-
 	// Prepare request URL
 	replacedPath, err := replaceVariables(request.Path, vars)
 	if err != nil {
 		return nil, err
 	}
 
-	reqURL := url.URL{
-		Scheme: "http",
-		Host:   fmt.Sprintf("%s:%d", a.HTTPTemplate.Config.Host, a.HTTPTemplate.Config.Port),
-		Path:   replacedPath,
+	rawURL := fmt.Sprintf("http://%s:%d%s", a.HTTPTemplate.Config.Host, a.HTTPTemplate.Config.Port, replacedPath)
+	reqURL, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
 	}
+
+	// Prepare request body
+	replacedJsonBody, err := replaceVariables(request.JsonBody, vars)
+	if err != nil {
+		return nil, err
+	}
+	request.JsonBody = replacedJsonBody
 
 	httpReq, err := http.NewRequest(request.Method, reqURL.String(), strings.NewReader(request.JsonBody))
 	if err != nil {
@@ -282,4 +293,13 @@ func (a *app) logHttpResponse(ctx context.Context, request models.HttpTemplateRe
 	for key, value := range httpResponse.Exports {
 		c.Println("  ", key, ":", value)
 	}
+}
+
+func (a *app) ListRequests(ctx context.Context) error {
+	for name, request := range a.HTTPTemplate.Requests {
+		fmt.Println(name, "\n  ", request.Method, request.Path)
+		fmt.Println()
+	}
+
+	return nil
 }
