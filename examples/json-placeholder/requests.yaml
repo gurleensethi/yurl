@@ -1,0 +1,17 @@
+config:
+  host: jsonplaceholder.typicode.com
+  port: 443
+  scheme: https
+
+requests:
+  GetTodo:
+    path: /todos/{{ id }}
+    method: GET
+
+  CreateTodo:
+    path: /todos
+    method: POST
+    jsonBody: |
+      {
+        "title": "{{ title }}"
+      }
