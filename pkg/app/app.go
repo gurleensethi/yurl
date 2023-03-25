@@ -319,9 +319,10 @@ func (a *app) buildRequest(ctx context.Context, request models.HttpTemplateReque
 func (a *app) logHttpRequest(ctx context.Context, request *models.HttpRequest) {
 	fmt.Println(styles.SectionHeader.Render("Request"))
 
+	protocol := styles.Url.Render(request.RawRequest.Proto)
 	method := styles.Url.Render(request.RawRequest.Method)
 	completeUrl := styles.Url.Render(request.RawRequest.URL.String())
-	fmt.Printf("%s %s\n", method, completeUrl)
+	fmt.Printf("%s %s %s\n", method, completeUrl, protocol)
 
 	for headerName, headerValue := range request.RawRequest.Header {
 		fmt.Printf("%s: %s\n", styles.HeaderName.Render(headerName), strings.Join(headerValue, ";"))
@@ -333,8 +334,9 @@ func (a *app) logHttpRequest(ctx context.Context, request *models.HttpRequest) {
 func (a *app) logHttpResponse(ctx context.Context, request models.HttpTemplateRequest, httpResponse *models.HttpResponse) {
 	fmt.Println(styles.SectionHeader.Render("Response"))
 
+	protocol := styles.Url.Render(httpResponse.RawResponse.Proto)
 	status := styles.Url.Render(httpResponse.RawResponse.Status)
-	fmt.Println(status)
+	fmt.Println(protocol, status)
 
 	for key, value := range httpResponse.RawResponse.Header {
 		fmt.Printf("%s: %s\n", styles.HeaderName.Render(key), strings.Join(value, "; "))
