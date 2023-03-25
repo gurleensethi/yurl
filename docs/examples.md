@@ -8,20 +8,26 @@ By default `yurl` loads in a file named `http.yaml`.
 
 ```yaml title="http.yaml"
 config:
-  host: localhost
-  port: 8000
+  host: jsonplaceholder.typicode.com
+  port: 443
+  scheme: https
 
 requests:
-  Login:
-    path: /v1/api/auth/login
-    method: POST
-    jsonBody: |
-      { 
-          "email": "{{ email }}",
-          "password": "{{ password }}" 
-      }
+  GetTodo:
+    path: /todos/{{ id }}
+    method: GET
 ```
 
 ```bash title="bash"
-yurl Login
+yurl GetTodo
 ```
+
+![Basic Example](./media/example-basic.gif)
+
+### Verbose output
+
+```bash title="bash"
+yurl -v GetTodo
+```
+
+![Basic Example](./media/example-basic-verbose.gif)
