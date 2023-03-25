@@ -22,6 +22,24 @@ import (
 
 var (
 	DefaultHTTPYamlFile = "http.yaml"
+
+	UsageText = `
+Use default file (http.yaml)
+
+  yurl <request name>
+
+Specify a request file
+
+  yurl -f requests-file.yaml <request name>
+
+Use variables
+
+  yurl -var email=test@test.com <request name>
+
+Use a variable file
+
+  yurl -var-file=local.vars <request name>
+`
 )
 
 type app struct {
@@ -39,6 +57,8 @@ func (a *app) BuildCliApp() *cli.App {
 	return &cli.App{
 		Name:        "yurl",
 		Description: "Write your http requests in yaml.",
+		Usage:       "Make http requests from command line using yaml.",
+		UsageText:   UsageText,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:    "verbose",
