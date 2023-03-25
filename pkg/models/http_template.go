@@ -12,9 +12,48 @@ type HttpTemplate struct {
 	Requests map[string]HttpTemplateRequest `yaml:"requests"`
 }
 
+func (t *HttpTemplate) Sanitize() {
+	t.Config.Sanitize()
+
+	for _, request := range t.Requests {
+		request.Sanitize()
+	}
+}
+
+func (t *HttpTemplate) Validate() error {
+	err := t.Config.Validate()
+	if err != nil {
+		return err
+	}
+
+	for _, request := range t.Requests {
+		err := request.Validate(t)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type Config struct {
-	Host string `yaml:"host"`
-	Port int    `yaml:"port"`
+	Host   string `yaml:"host"`
+	Port   int    `yaml:"port"`
+	Scheme string `yaml:"scheme"`
+}
+
+func (c Config) Validate() error {
+	if c.Scheme != "http" && c.Scheme != "https" {
+		return fmt.Errorf("config.scheme must be http or https")
+	}
+
+	return nil
+}
+
+func (c *Config) Sanitize() {
+	if c.Scheme == "" {
+		c.Scheme = "http"
+	}
 }
 
 type PreRequest struct {

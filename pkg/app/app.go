@@ -109,6 +109,13 @@ func (a *app) BuildCliApp() *cli.App {
 				return err
 			}
 
+			a.HTTPTemplate.Sanitize()
+
+			err = a.HTTPTemplate.Validate()
+			if err != nil {
+				return err
+			}
+
 			return nil
 		},
 		Action: func(c *cli.Context) error {
@@ -304,6 +311,8 @@ func (a *app) buildRequest(ctx context.Context, request models.HttpTemplateReque
 	if err != nil {
 		return nil, err
 	}
+
+	reqURL.Scheme = a.HTTPTemplate.Config.Scheme
 
 	// Prepare request body
 	replacedJsonBody, err := replaceVariables(request.JsonBody, vars)
