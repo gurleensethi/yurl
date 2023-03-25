@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/gurleensethi/yurl/pkg/models"
+	"github.com/gurleensethi/yurl/pkg/styles"
 	"github.com/urfave/cli/v2"
 	"github.com/yalp/jsonpath"
 	"gopkg.in/yaml.v3"
@@ -317,35 +317,37 @@ func (a *app) buildRequest(ctx context.Context, request models.HttpTemplateReque
 }
 
 func (a *app) logHttpRequest(ctx context.Context, request *models.HttpRequest) {
-	c := color.New(color.FgHiYellow)
+	fmt.Println(styles.SectionHeader.Render("Request"))
 
-	c.Println("\n>>> Request")
-	c.Println("-----------")
-	c.Printf("%s %s\n", request.RawRequest.Method, request.RawRequest.URL.String())
+	method := styles.Url.Render(request.RawRequest.Method)
+	completeUrl := styles.Url.Render(request.RawRequest.URL.String())
+	fmt.Printf("%s %s\n", method, completeUrl)
+
 	for headerName, headerValue := range request.RawRequest.Header {
-		c.Printf("%s: %s\n", headerName, strings.Join(headerValue, ";"))
+		fmt.Printf("%s: %s\n", styles.HeaderName.Render(headerName), strings.Join(headerValue, ";"))
 	}
-	c.Println(request.Template.JsonBody)
+
+	fmt.Println(request.Template.JsonBody)
 }
 
 func (a *app) logHttpResponse(ctx context.Context, request models.HttpTemplateRequest, httpResponse *models.HttpResponse) {
-	c := color.New(color.FgMagenta)
+	fmt.Println(styles.SectionHeader.Render("Response"))
 
-	c.Println("\n<<< Response")
-	c.Println("------------")
-	c.Println(httpResponse.RawResponse.Status)
+	status := styles.Url.Render(httpResponse.RawResponse.Status)
+	fmt.Println(status)
+
 	for key, value := range httpResponse.RawResponse.Header {
-		c.Printf("%s: %s\n", key, strings.Join(value, "; "))
+		fmt.Printf("%s: %s\n", styles.HeaderName.Render(key), strings.Join(value, "; "))
 	}
-	c.Println(string(httpResponse.RawBody))
+	fmt.Println(string(httpResponse.RawBody))
 
-	c.Println("\nExports:")
-	c.Println("--------")
+	fmt.Println(styles.SectionHeader.Render("Exports"))
+
 	if len(httpResponse.Exports) == 0 {
-		c.Println("  No exports")
+		fmt.Println("  No exports")
 	}
 	for key, value := range httpResponse.Exports {
-		c.Println("  ", key, ":", value)
+		fmt.Println(key, ":", value)
 	}
 }
 
