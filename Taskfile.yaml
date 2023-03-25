@@ -1,0 +1,6 @@
+version: 3
+
+tasks:
+  docs-serve:
+    cmds:
+      - docker run --name yurl-mk-docs --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material:latest
