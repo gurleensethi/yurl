@@ -1,5 +1,7 @@
 # yurl
 
-Inspired from [hurl](https://hurl.dev).
+📚 [Documentation](https://gurleensethi.github.io/yurl/)
 
-WIP.
+🌟 Inspired from [hurl](https://hurl.dev).
+
+🔨 WIP.
