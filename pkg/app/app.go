@@ -41,6 +41,8 @@ Use a variable file
 
   yurl -var-file=local.vars <request name>
 `
+
+	ErrParsingExports = errors.New("error parsing exports")
 )
 
 type app struct {
@@ -230,8 +232,6 @@ func (a *app) ExecuteRequest(ctx context.Context, name string, opts ExecuteReque
 		return err
 	}
 
-	// When verbose is set executeRequest will print the request and response.
-	// So we need to print it only when verbose is not set.
 	if !opts.Verbose {
 		fmt.Println(string(response.RawBody))
 	}
@@ -264,35 +264,41 @@ func (a *app) executeRequest(ctx context.Context, requestTemplate models.HttpTem
 		return nil, nil, err
 	}
 
-	// Parse out exports
-	exports := make(map[string]any)
-
-	for name, export := range requestTemplate.Exports {
-		if export.JSON != "" {
-			var parsedBody map[string]any
-			err := json.Unmarshal([]byte(bodyBytes), &parsedBody)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			value, err := jsonpath.Read(parsedBody, export.JSON)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			exports[name] = value
-		}
-	}
-
 	httpResponse := &models.HttpResponse{
 		Request:     httpRequest,
 		RawResponse: httpResp,
 		RawBody:     bodyBytes,
-		Exports:     exports,
+		Exports:     make(map[string]any),
 	}
 
+	// Capturing the exports error to process later on because regardless if there is an error
+	// parsing the exports we still want to log the response.
+	var exportsErr error
+
+	for name, export := range requestTemplate.Exports {
+		if export.JSON != "" {
+			var parsedBody map[string]any
+			exportsErr = json.Unmarshal([]byte(bodyBytes), &parsedBody)
+			if err != nil {
+				exportsErr = err
+				break
+			}
+
+			var value any
+			value, err := jsonpath.Read(parsedBody, export.JSON)
+			if err != nil {
+				exportsErr = err
+				break
+			}
+
+			httpResponse.Exports[name] = value
+		}
+	}
 	if verbose {
 		logger.LogHttpResponse(ctx, httpResponse)
+	}
+	if exportsErr != nil {
+		return nil, nil, fmt.Errorf("%w: %w", ErrParsingExports, exportsErr)
 	}
 
 	return httpReq, httpResponse, nil

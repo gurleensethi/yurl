@@ -14,6 +14,7 @@ func main() {
 			panic(err)
 		}
 
+		fmt.Println()
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
