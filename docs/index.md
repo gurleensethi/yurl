@@ -46,7 +46,7 @@ yurl GetTodo
 Enter `id`:
 ```
 
-Your can use placeholders almost everywhere, in url path, request body, headers.
+You can use placeholders almost everywhere, in url path, request body, headers.
 
 ### Pre-Run Requests
 
@@ -79,4 +79,4 @@ requests:
 
 1. Capture the `authToken` from response. Here we are using `jsonpath` to parse the json body response.
 2. Defining a list of requests to pre-run before executing this request.
-3. Using the "exported" `auth` from **Login** request. All the exported variables from a pre-request are automatically available for use.
+3. Using the "exported" `authToken` from **Login** request. All the exported variables from a pre-request are automatically available for use.
