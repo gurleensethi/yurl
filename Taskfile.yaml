@@ -4,3 +4,10 @@ tasks:
   docs-serve:
     cmds:
       - docker run --name yurl-mk-docs --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material:latest
+
+  build-image:
+    vars:
+      IMAGE_NAME: "{{.IMAGE_NAME}}"
+      IMAGE_TAG: "{{.IMAGE_TAG}}"
+    cmds:
+      - docker build -t {{ .IMAGE_NAME | default "yurl" }}:{{ .IMAGE_TAG | default "latest" }} .

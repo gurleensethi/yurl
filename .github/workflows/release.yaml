@@ -1,0 +1,23 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version"
+        required: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Build Image
+        run: docker build -t ghcr.io/gurleensethi/yurl:${{ inputs.version }} .
+      - name: Push Image
+        run: docker push ghcr.io/gurleensethi/yurl:${{ inputs.version }}
