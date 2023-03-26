@@ -13,5 +13,6 @@ requests:
     method: POST
     jsonBody: |
       {
-        "title": "{{ title }}"
+        "title": "{{ title }}",
+        "userId": {{ userId }}
       }

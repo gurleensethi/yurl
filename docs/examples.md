@@ -75,3 +75,34 @@ requests:
 ```bash title="bash"
 yurl -f requests.yaml CreateTodo
 ```
+
+## Passing variables
+
+Use the `-var` or `--variable` to specify a variable.
+
+```yaml title="requests.yaml"
+config:
+  host: jsonplaceholder.typicode.com
+  port: 443
+  scheme: https
+
+requests:
+  CreateTodo:
+    path: /todos
+    method: POST
+    jsonBody: |
+      {
+        "title": "{{ title }}",
+        "userId": {{ userId }}
+      }
+```
+
+```bash title="bash"
+yurl -f requests.yaml -var title=Title CreateTodo
+```
+
+Provide as many variables as you want.
+
+```bash title="bash"
+yurl -f requests.yaml -var title=Title -var userId=1 CreateTodo
+```
