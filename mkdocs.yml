@@ -1,6 +1,6 @@
 site_name: yurl
 repo_url: https://github.com/gurleensethi/yurl
-repo_name: yurl
+repo_name: gurleensethi/yurl
 
 plugins:
   - search:
@@ -15,23 +15,33 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - attr_list
+  - md_in_html
 
 theme:
   name: material
+  logo: media/yurl-icon.png
   features:
     - navigation.indexes
+    - content.code.annotate
 
   palette:
     # Palette toggle for light mode
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
+    - scheme: default
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
 
     # Palette toggle for dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
+    - scheme: slate
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Examples: examples.md
