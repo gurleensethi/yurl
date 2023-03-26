@@ -82,6 +82,7 @@ type HttpRequest struct {
 }
 
 type HttpResponse struct {
+	Request     *HttpRequest
 	RawResponse *http.Response
 	RawBody     []byte
 	Exports     map[string]any

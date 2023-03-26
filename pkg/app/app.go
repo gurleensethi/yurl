@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gurleensethi/yurl/pkg/logger"
 	"github.com/gurleensethi/yurl/pkg/models"
 	"github.com/gurleensethi/yurl/pkg/styles"
 	"github.com/urfave/cli/v2"
@@ -247,7 +248,7 @@ func (a *app) executeRequest(ctx context.Context, requestTemplate models.HttpTem
 	httpReq := httpRequest.RawRequest
 
 	if verbose {
-		a.logHttpRequest(ctx, httpRequest)
+		logger.LogHttpRequest(ctx, httpRequest)
 	}
 
 	httpClient := http.Client{}
@@ -284,13 +285,14 @@ func (a *app) executeRequest(ctx context.Context, requestTemplate models.HttpTem
 	}
 
 	httpResponse := &models.HttpResponse{
+		Request:     httpRequest,
 		RawResponse: httpResp,
 		RawBody:     bodyBytes,
 		Exports:     exports,
 	}
 
 	if verbose {
-		a.logHttpResponse(ctx, requestTemplate, httpResponse)
+		logger.LogHttpResponse(ctx, httpResponse)
 	}
 
 	return httpReq, httpResponse, nil
@@ -358,43 +360,6 @@ func (a *app) buildRequest(ctx context.Context, request models.HttpTemplateReque
 		RawRequest: httpReq,
 		Template:   &request,
 	}, nil
-}
-
-func (a *app) logHttpRequest(ctx context.Context, request *models.HttpRequest) {
-	fmt.Println(styles.SectionHeader.Render("Request"))
-
-	protocol := styles.Url.Render(request.RawRequest.Proto)
-	method := styles.Url.Render(request.RawRequest.Method)
-	completeUrl := styles.Url.Render(request.RawRequest.URL.String())
-	fmt.Printf("%s %s %s\n", method, completeUrl, protocol)
-
-	for headerName, headerValue := range request.RawRequest.Header {
-		fmt.Printf("%s: %s\n", styles.HeaderName.Render(headerName), strings.Join(headerValue, ";"))
-	}
-
-	fmt.Println(request.Template.JsonBody)
-}
-
-func (a *app) logHttpResponse(ctx context.Context, request models.HttpTemplateRequest, httpResponse *models.HttpResponse) {
-	fmt.Println(styles.SectionHeader.Render("Response"))
-
-	protocol := styles.Url.Render(httpResponse.RawResponse.Proto)
-	status := styles.Url.Render(httpResponse.RawResponse.Status)
-	fmt.Println(protocol, status)
-
-	for key, value := range httpResponse.RawResponse.Header {
-		fmt.Printf("%s: %s\n", styles.HeaderName.Render(key), strings.Join(value, "; "))
-	}
-	fmt.Println(string(httpResponse.RawBody))
-
-	fmt.Println(styles.SectionHeader.Render("Exports"))
-
-	if len(httpResponse.Exports) == 0 {
-		fmt.Println("  No exports")
-	}
-	for key, value := range httpResponse.Exports {
-		fmt.Println(key, ":", value)
-	}
 }
 
 func (a *app) ListRequests(ctx context.Context) error {
