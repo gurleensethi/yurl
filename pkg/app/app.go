@@ -390,10 +390,18 @@ func (a *app) ListRequests(ctx context.Context) error {
 
 	sort.Strings(keys)
 
-	for _, key := range keys {
+	for i, key := range keys {
 		request := a.HTTPTemplate.Requests[key]
-		fmt.Println(styles.HeaderName.Render(key))
+
+		name := styles.HeaderName.Render(key)
+		description := styles.Description.Render(request.Description)
+
+		fmt.Println(name, description)
 		fmt.Println("  ", styles.Url.Bold(false).Render(request.Method+" "+request.Path))
+
+		if i < len(keys)-1 {
+			fmt.Println()
+		}
 	}
 
 	return nil

@@ -66,6 +66,7 @@ type Export struct {
 
 type HttpTemplateRequest struct {
 	Name        string
+	Description string            `yaml:"description"`
 	Method      string            `yaml:"method"`
 	Path        string            `yaml:"path"`
 	JsonBody    string            `yaml:"jsonBody"`

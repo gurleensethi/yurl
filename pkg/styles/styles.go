@@ -5,6 +5,7 @@ import "github.com/charmbracelet/lipgloss"
 var (
 	ColorBlue   = lipgloss.Color("#65BFCC")
 	ColorPurple = lipgloss.Color("#CF58D8")
+	ColorGray   = lipgloss.Color("#B2B2B2")
 
 	HeaderName = lipgloss.
 			NewStyle().
@@ -23,4 +24,9 @@ var (
 		NewStyle().
 		Foreground(ColorPurple).
 		Bold(true)
+
+	Description = lipgloss.
+			NewStyle().
+			Faint(true).
+			Foreground(ColorGray)
 )
