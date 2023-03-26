@@ -315,19 +315,34 @@ func (a *app) buildRequest(ctx context.Context, request models.HttpTemplateReque
 	reqURL.Scheme = a.HTTPTemplate.Config.Scheme
 
 	// Prepare request body
-	replacedJsonBody, err := replaceVariables(request.JsonBody, vars)
+	body := ""
+	bodyContentType := ""
+
+	if request.Body != "" {
+		replacedBody, err := replaceVariables(request.Body, vars)
+		if err != nil {
+			return nil, err
+		}
+		body = replacedBody
+		request.Body = replacedBody
+		bodyContentType = "text/plain"
+	} else if request.JsonBody != "" {
+		replacedJsonBody, err := replaceVariables(request.JsonBody, vars)
+		if err != nil {
+			return nil, err
+		}
+		body = replacedJsonBody
+		request.JsonBody = replacedJsonBody
+		bodyContentType = "application/json"
+	}
+
+	httpReq, err := http.NewRequest(request.Method, reqURL.String(), strings.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
-	request.JsonBody = replacedJsonBody
 
-	httpReq, err := http.NewRequest(request.Method, reqURL.String(), strings.NewReader(request.JsonBody))
-	if err != nil {
-		return nil, err
-	}
-
-	if request.JsonBody != "" {
-		httpReq.Header.Add("Content-Type", "application/json")
+	if bodyContentType != "" {
+		httpReq.Header.Add("Content-Type", bodyContentType)
 	}
 
 	for key, value := range request.Headers {
@@ -336,7 +351,7 @@ func (a *app) buildRequest(ctx context.Context, request models.HttpTemplateReque
 			return nil, err
 		}
 
-		httpReq.Header.Add(key, replacedValue)
+		httpReq.Header.Set(key, replacedValue)
 	}
 
 	return &models.HttpRequest{

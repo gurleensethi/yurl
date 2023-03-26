@@ -69,6 +69,7 @@ type HttpTemplateRequest struct {
 	Description string            `yaml:"description"`
 	Method      string            `yaml:"method"`
 	Path        string            `yaml:"path"`
+	Body        string            `yaml:"body"`
 	JsonBody    string            `yaml:"jsonBody"`
 	Headers     map[string]string `yaml:"headers"`
 	PreRequests []PreRequest      `yaml:"pre"`
