@@ -43,6 +43,14 @@ type Config struct {
 }
 
 func (c Config) Validate() error {
+	if c.Host == "" {
+		return fmt.Errorf("config.host is required")
+	}
+
+	if c.Port == 0 {
+		return fmt.Errorf("config.port is required")
+	}
+
 	if c.Scheme != "http" && c.Scheme != "https" {
 		return fmt.Errorf("config.scheme must be http or https")
 	}
