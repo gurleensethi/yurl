@@ -29,4 +29,12 @@ var (
 			NewStyle().
 			Faint(true).
 			Foreground(ColorGray)
+
+	PrimaryText = lipgloss.
+			NewStyle().
+			Foreground(ColorPurple)
+
+	SecondaryText = lipgloss.
+			NewStyle().
+			Foreground(ColorBlue)
 )
