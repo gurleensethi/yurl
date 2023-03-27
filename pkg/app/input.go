@@ -58,8 +58,7 @@ func replaceVariables(s string, vars models.Variables) (string, error) {
 				return "", fmt.Errorf("input for `%s` must be of type float", key)
 			}
 		case "bool":
-			_, err := strconv.ParseBool(input)
-			if err != nil {
+			if input != "true" && input != "false" {
 				return "", fmt.Errorf("input for `%s` must be of type bool", key)
 			}
 		case "string":
