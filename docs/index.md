@@ -1,6 +1,6 @@
 # Home
 
-![](media/yurl-icon.png){ width=300px  }
+![](media/yurl-icon.png){ width=300px }
 
 **Motivation:** I want to stay in the terminal so Postman is not an option. `curl` is quick and fast, but no way to save and customize requests. Here comes `yurl` :fontawesome-solid-bolt-lightning:.
 

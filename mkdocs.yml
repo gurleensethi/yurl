@@ -7,6 +7,7 @@ plugins:
       lang: en
 
 markdown_extensions:
+  - admonition
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -14,6 +15,7 @@ markdown_extensions:
       linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.details
   - pymdownx.superfences
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
@@ -49,4 +51,5 @@ theme:
 nav:
   - Home: index.md
   - Installation: installation.md
+  - Variables: variables.md
   - Examples: examples.md
