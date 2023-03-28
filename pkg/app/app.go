@@ -302,6 +302,10 @@ func (a *app) ExecuteRequest(ctx context.Context, request models.HttpRequestTemp
 		for key, value := range httpResponse.Exports {
 			vars[key] = value
 		}
+
+		if opts.Verbose {
+			fmt.Println(styles.Divider.Render("------------------------------------------------------------------------------"))
+		}
 	}
 
 	_, response, err := a.executeRequest(ctx, request, vars, opts.Verbose)

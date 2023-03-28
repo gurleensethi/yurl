@@ -3,9 +3,9 @@ package styles
 import "github.com/charmbracelet/lipgloss"
 
 var (
-	ColorBlue   = lipgloss.Color("#65BFCC")
-	ColorPurple = lipgloss.Color("#CF58D8")
-	ColorGray   = lipgloss.Color("#B2B2B2")
+	ColorBlue   = lipgloss.AdaptiveColor{Dark: "#65BFCC", Light: "#23a3b1"}
+	ColorPurple = lipgloss.AdaptiveColor{Dark: "#CF58D8", Light: "#be02bf"}
+	ColorGray   = lipgloss.AdaptiveColor{Dark: "#B2B2B2", Light: "#000000"}
 
 	HeaderName = lipgloss.
 			NewStyle().
@@ -19,6 +19,13 @@ var (
 			MarginTop(1).
 			MarginBottom(1).
 			Padding(0)
+
+	Divider = lipgloss.
+		NewStyle().
+		Bold(true).
+		MarginTop(1).
+		MarginBottom(1).
+		Padding(0)
 
 	Url = lipgloss.
 		NewStyle().
