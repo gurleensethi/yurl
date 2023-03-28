@@ -10,7 +10,7 @@ type Variables map[string]any
 
 type HttpTemplate struct {
 	Config   Config                         `yaml:"config"`
-	Requests map[string]HttpTemplateRequest `yaml:"requests"`
+	Requests map[string]HttpRequestTemplate `yaml:"requests"`
 }
 
 func (t *HttpTemplate) Sanitize() {
@@ -73,7 +73,7 @@ type Export struct {
 	JSON string `yaml:"json"`
 }
 
-type HttpTemplateRequest struct {
+type HttpRequestTemplate struct {
 	Name        string
 	Description string            `yaml:"description"`
 	Method      string            `yaml:"method"`
@@ -86,7 +86,7 @@ type HttpTemplateRequest struct {
 }
 
 type HttpRequest struct {
-	Template   *HttpTemplateRequest
+	Template   *HttpRequestTemplate
 	RawRequest *http.Request
 }
 
@@ -97,7 +97,7 @@ type HttpResponse struct {
 	Exports     map[string]any
 }
 
-func (r *HttpTemplateRequest) Sanitize() {
+func (r *HttpRequestTemplate) Sanitize() {
 	r.Method = strings.ToUpper(r.Method)
 	if r.Method == "" {
 		r.Method = "GET"
@@ -108,7 +108,7 @@ func (r *HttpTemplateRequest) Sanitize() {
 	}
 }
 
-func (r *HttpTemplateRequest) Validate(httpTemplate *HttpTemplate) error {
+func (r *HttpRequestTemplate) Validate(httpTemplate *HttpTemplate) error {
 	// Validate existence of pre requests
 	for _, preRequest := range r.PreRequests {
 		if _, ok := httpTemplate.Requests[preRequest.Name]; !ok {

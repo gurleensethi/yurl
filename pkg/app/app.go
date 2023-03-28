@@ -155,7 +155,7 @@ func (a *app) BuildCliApp() *cli.App {
 						}
 					}
 
-					httpTemplateRequest := models.HttpTemplateRequest{
+					httpTemplateRequest := models.HttpRequestTemplate{
 						Method:   method,
 						Path:     path,
 						Body:     body,
@@ -281,7 +281,7 @@ type ExecuteRequestOpts struct {
 	Variables models.Variables
 }
 
-func (a *app) ExecuteRequest(ctx context.Context, request models.HttpTemplateRequest, opts ExecuteRequestOpts) error {
+func (a *app) ExecuteRequest(ctx context.Context, request models.HttpRequestTemplate, opts ExecuteRequestOpts) error {
 	request.Sanitize()
 
 	err := request.Validate(&a.HTTPTemplate)
@@ -316,7 +316,7 @@ func (a *app) ExecuteRequest(ctx context.Context, request models.HttpTemplateReq
 	return nil
 }
 
-func (a *app) executeRequest(ctx context.Context, requestTemplate models.HttpTemplateRequest, vars models.Variables, verbose bool) (*http.Request, *models.HttpResponse, error) {
+func (a *app) executeRequest(ctx context.Context, requestTemplate models.HttpRequestTemplate, vars models.Variables, verbose bool) (*http.Request, *models.HttpResponse, error) {
 	httpRequest, err := a.buildRequest(ctx, requestTemplate, vars)
 	if err != nil {
 		return nil, nil, err
@@ -382,7 +382,7 @@ func (a *app) executeRequest(ctx context.Context, requestTemplate models.HttpTem
 }
 
 // buildRequest builds a http request from the request template
-func (a *app) buildRequest(ctx context.Context, request models.HttpTemplateRequest, vars models.Variables) (*models.HttpRequest, error) {
+func (a *app) buildRequest(ctx context.Context, request models.HttpRequestTemplate, vars models.Variables) (*models.HttpRequest, error) {
 	request.Sanitize()
 
 	// Prepare request URL
