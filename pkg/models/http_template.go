@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type Variables map[string]any
@@ -97,6 +98,7 @@ type HttpResponse struct {
 }
 
 func (r *HttpTemplateRequest) Sanitize() {
+	r.Method = strings.ToUpper(r.Method)
 	if r.Method == "" {
 		r.Method = "GET"
 	}

@@ -93,21 +93,95 @@ func (a *app) BuildCliApp() *cli.App {
 					return a.ListRequests(c.Context)
 				},
 			},
+			{
+				Name:    "request",
+				Aliases: []string{"req"},
+				Usage:   "make a request on the fly. ",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "method",
+						Usage:   "http method",
+						Aliases: []string{"m"},
+					},
+					&cli.StringFlag{
+						Name:    "path",
+						Usage:   "path of the request",
+						Aliases: []string{"p"},
+					},
+					&cli.StringFlag{
+						Name:    "body",
+						Usage:   "body of the request",
+						Aliases: []string{"b"},
+					},
+					&cli.StringFlag{
+						Name:    "json",
+						Usage:   "json body of the request",
+						Aliases: []string{"j"},
+					},
+					&cli.StringSliceFlag{
+						Name:    "header",
+						Usage:   "header of the request",
+						Aliases: []string{"head"},
+					},
+					// TODO: add ability to add pre requests
+				},
+				Action: func(cliCtx *cli.Context) error {
+					method := cliCtx.String("method")
+					path := cliCtx.String("path")
+					body := cliCtx.String("body")
+					jsonBody := cliCtx.String("json")
+					headers := cliCtx.StringSlice("header")
+
+					// Parse headers.
+					// Raw format: "key:value"
+					parsedHeaders := make(map[string]string)
+					for _, header := range headers {
+						parts := strings.Split(header, ":")
+						if len(parts) != 2 {
+							return errors.New("invalid header")
+						}
+						parsedHeaders[parts[0]] = parts[1]
+					}
+
+					variables := a.FileVars
+
+					// Parse variables from command line
+					for _, variable := range cliCtx.StringSlice("variable") {
+						parts := strings.Split(variable, "=")
+						if len(parts) >= 2 {
+							variables[parts[0]] = strings.Join(parts[1:], "=")
+						}
+					}
+
+					httpTemplateRequest := models.HttpTemplateRequest{
+						Method:   method,
+						Path:     path,
+						Body:     body,
+						JsonBody: jsonBody,
+						Headers:  parsedHeaders,
+					}
+
+					return a.ExecuteRequest(cliCtx.Context, httpTemplateRequest, ExecuteRequestOpts{
+						Verbose:   cliCtx.Bool("verbose"),
+						Variables: variables,
+					})
+				},
+			},
 		},
-		Before: func(c *cli.Context) error {
-			filePath := c.String("file")
+		Before: func(cliCtx *cli.Context) error {
+			filePath := cliCtx.String("file")
 			if filePath == "" {
 				filePath = DefaultHTTPYamlFile
 			}
 
-			err := a.parseHTTPYamlFile(c.Context, filePath)
+			err := a.parseHTTPYamlFile(cliCtx.Context, filePath)
 			if err != nil {
 				return err
 			}
 
-			variablesFilePaths := c.StringSlice("variable-file")
+			variablesFilePaths := cliCtx.StringSlice("variable-file")
 
-			err = a.parseVariablesFromFiles(c.Context, variablesFilePaths)
+			err = a.parseVariablesFromFiles(cliCtx.Context, variablesFilePaths)
 			if err != nil {
 				return err
 			}
@@ -121,24 +195,31 @@ func (a *app) BuildCliApp() *cli.App {
 
 			return nil
 		},
-		Action: func(c *cli.Context) error {
-			if c.Args().Len() == 0 {
+		Action: func(cliCtx *cli.Context) error {
+			if cliCtx.Args().Len() == 0 {
 				fmt.Println("Use `yurl -h` for help")
 				return nil
 			}
 
+			name := cliCtx.Args().First()
+			request, ok := a.HTTPTemplate.Requests[name]
+			if !ok {
+				return errors.New("request not found")
+			}
+			request.Name = name
+
 			variables := a.FileVars
 
 			// Parse variables from command line
-			for _, variable := range c.StringSlice("variable") {
+			for _, variable := range cliCtx.StringSlice("variable") {
 				parts := strings.Split(variable, "=")
 				if len(parts) >= 2 {
 					variables[parts[0]] = strings.Join(parts[1:], "=")
 				}
 			}
 
-			return a.ExecuteRequest(c.Context, c.Args().First(), ExecuteRequestOpts{
-				Verbose:   c.Bool("verbose"),
+			return a.ExecuteRequest(cliCtx.Context, request, ExecuteRequestOpts{
+				Verbose:   cliCtx.Bool("verbose"),
 				Variables: variables,
 			})
 		},
@@ -198,13 +279,7 @@ type ExecuteRequestOpts struct {
 	Variables models.Variables
 }
 
-func (a *app) ExecuteRequest(ctx context.Context, name string, opts ExecuteRequestOpts) error {
-	request, ok := a.HTTPTemplate.Requests[name]
-	if !ok {
-		return errors.New("request not found")
-	}
-
-	request.Name = name
+func (a *app) ExecuteRequest(ctx context.Context, request models.HttpTemplateRequest, opts ExecuteRequestOpts) error {
 	request.Sanitize()
 
 	err := request.Validate(&a.HTTPTemplate)
