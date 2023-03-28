@@ -138,8 +138,10 @@ func (a *app) BuildCliApp() *cli.App {
 					for _, header := range headers {
 						parts := strings.Split(header, ":")
 						if len(parts) != 2 {
-							return errors.New("invalid header")
+							return fmt.Errorf("invalid header: %s", header)
 						}
+						parts[0] = strings.TrimSpace(parts[0])
+						parts[1] = strings.TrimSpace(parts[1])
 						parsedHeaders[parts[0]] = parts[1]
 					}
 
