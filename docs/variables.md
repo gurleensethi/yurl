@@ -15,7 +15,7 @@ requests:
 
 ## User Input
 
-Variables are sourced from a **variable set**. If a variable doesn't exist in the variable set, user is explicitly prompted to enter the value for that value.
+Variables are sourced from a **variable set**. If a variable doesn't exist in the variable set, user is explicitly prompted to enter the value for that variable.
 
 ```yaml title="http.yaml"
 requests:
@@ -71,7 +71,7 @@ This is perfect for the cases when each time you execute a request you want to p
 
 ## Command Line Variables
 
-You can pass variables directly from command line using `-var` or `--variable` flag.
+You can pass value for variables directly from command line using `-var` or `--variable` flag.
 
 ```yaml title="http.yaml"
 requests:
@@ -153,9 +153,9 @@ $ yurl GetTodoById
 Enter `id` (int): 10
 ```
 
-In the above example, type `int` is defined for the variable `id`. When the prompt is presented to the user for value the required type is also displayed.
+In the above example, type `int` is defined for the variable `id`. When user is prompted for the value of `id` the required type is also displayed.
 
-If the entered value is not valid, `yurl` errors immediately.
+If the entered value is not valid, `yurl` exists immediately.
 
 ```bash linenums="0"
 $ yurl GetTodoById
@@ -163,6 +163,8 @@ Enter `id` (int): not int
 
 input for `id` must be of type int
 ```
+
+### Supported Types
 
 Currently the following types are supported:
 
