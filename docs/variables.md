@@ -130,3 +130,43 @@ $ yurl -var-file local.vars -var-file staging.vars Login
 ```
 
 All the variables are added to the **variable set**.
+
+## Variable Types
+
+You can define types on variables when the value is prompted from the user.
+
+Use the pattern: `{{ <var name>:<type> }}` to enforce a type.
+
+```yaml title="http.requests"
+requests:
+  GetTodoById:
+    method: GET
+    path: /todos/{{ id:int }} # (1)!
+    headers:
+      Accept: application/json
+```
+
+1. Types are defined using `<var name>:<type>` pattern.
+
+```bash linenums="0"
+$ yurl GetTodoById
+Enter `id` (int): 10
+```
+
+In the above example, type `int` is defined for the variable `id`. When the prompt is presented to the user for value the required type is also displayed.
+
+If the entered value is not valid, `yurl` errors immediately.
+
+```bash linenums="0"
+$ yurl GetTodoById
+Enter `id` (int): not int
+
+input for `id` must be of type int
+```
+
+Currently the following types are supported:
+
+- `string`
+- `int`
+- `float`
+- `bool`
