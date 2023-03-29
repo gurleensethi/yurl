@@ -83,6 +83,11 @@ func (a *app) BuildCliApp() *cli.App {
 				Usage:   "path of file to read http requests from",
 				Aliases: []string{"f"},
 			},
+			&cli.BoolFlag{
+				Name:    "list-variables",
+				Usage:   "list all variables in the request",
+				Aliases: []string{"lv", "list-vars"},
+			},
 		},
 		Commands: []*cli.Command{
 			{
@@ -219,6 +224,12 @@ func (a *app) BuildCliApp() *cli.App {
 				}
 			}
 
+			// List variables in the http request
+			listVariables := cliCtx.Bool("list-variables")
+			if listVariables {
+				return a.ListRequestVariables(cliCtx.Context, request)
+			}
+
 			return a.ExecuteRequest(cliCtx.Context, request, ExecuteRequestOpts{
 				Verbose:   cliCtx.Bool("verbose"),
 				Variables: variables,
@@ -320,6 +331,49 @@ func (a *app) ExecuteRequest(ctx context.Context, request models.HttpRequestTemp
 
 	if !opts.Verbose {
 		fmt.Println(string(response.RawBody))
+	}
+
+	return nil
+}
+
+func (a *app) ListRequestVariables(ctx context.Context, request models.HttpRequestTemplate) error {
+	varTextStyle := styles.SecondaryText.Copy()
+
+	// Find variables in the path
+	pathVars := findVariables(request.Path)
+
+	if len(pathVars) > 0 {
+		fmt.Println(styles.PrimaryText.Render("Path"))
+
+		for _, pathVar := range pathVars {
+			fmt.Println(varTextStyle.Render("  " + pathVar))
+		}
+	}
+
+	// Find variables in the headers
+	headerVars := []string{}
+	for _, header := range request.Headers {
+		headerVars = append(headerVars, findVariables(header)...)
+	}
+
+	if len(headerVars) > 0 {
+		fmt.Println(styles.PrimaryText.Render("Headers"))
+
+		for _, headerVar := range headerVars {
+			fmt.Println(varTextStyle.Render("  " + headerVar))
+		}
+	}
+
+	// Find variables in the body
+	bodyVars := findVariables(request.Body)
+	bodyVars = append(bodyVars, findVariables(request.JsonBody)...)
+
+	if len(bodyVars) > 0 {
+		fmt.Println(styles.PrimaryText.Render("Body"))
+
+		for _, bodyVar := range bodyVars {
+			fmt.Println(varTextStyle.Render("  " + bodyVar))
+		}
 	}
 
 	return nil
@@ -469,7 +523,7 @@ func (a *app) ListRequests(ctx context.Context) error {
 		description := styles.Description.Render(request.Description)
 
 		fmt.Println(name, description)
-		fmt.Println("  ", styles.Url.Bold(false).Render(request.Method+" "+request.Path))
+		fmt.Println("  ", styles.Url.Copy().Bold(false).Render(request.Method+" "+request.Path))
 
 		if i < len(keys)-1 {
 			fmt.Println()

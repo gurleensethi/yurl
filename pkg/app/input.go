@@ -16,6 +16,25 @@ var (
 	inputRegex = regexp.MustCompile(`{{\s+?([a-zA-Z0-9]+):?(string|int|float|bool)?\s+?}}`)
 )
 
+func findVariables(s string) []string {
+	matches := inputRegex.FindAllStringSubmatch(s, -1)
+	if len(matches) == 0 {
+		return nil
+	}
+
+	vars := make([]string, 0)
+	for _, match := range matches {
+		variable := match[1]
+		if len(match) > 2 && match[2] != "" {
+			variable += " (" + match[2] + ")"
+		}
+
+		vars = append(vars, variable)
+	}
+
+	return vars
+}
+
 func replaceVariables(s string, vars models.Variables) (string, error) {
 	matches := inputRegex.FindAllStringSubmatch(s, -1)
 	if len(matches) == 0 {
