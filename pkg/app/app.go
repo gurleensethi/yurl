@@ -208,7 +208,6 @@ func (a *app) BuildCliApp() *cli.App {
 			if !ok {
 				return errors.New("request not found")
 			}
-			request.Name = name
 
 			variables := a.FileVars
 
@@ -240,6 +239,12 @@ func (a *app) parseHTTPYamlFile(ctx context.Context, filePath string) error {
 	err = yaml.NewDecoder(file).Decode(&a.HTTPTemplate)
 	if err != nil {
 		return err
+	}
+
+	// Set name for each request
+	for name, req := range a.HTTPTemplate.Requests {
+		req.Name = name
+		a.HTTPTemplate.Requests[name] = req
 	}
 
 	return nil

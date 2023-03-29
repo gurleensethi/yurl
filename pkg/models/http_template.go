@@ -112,7 +112,7 @@ func (r *HttpRequestTemplate) Validate(httpTemplate *HttpTemplate) error {
 	// Validate existence of pre requests
 	for _, preRequest := range r.PreRequests {
 		if _, ok := httpTemplate.Requests[preRequest.Name]; !ok {
-			return fmt.Errorf("%s requires a pre request %s which is not defined", r.Name, preRequest.Name)
+			return fmt.Errorf("'%s' requires a pre request '%s' which is not defined", r.Name, preRequest.Name)
 		}
 	}
 
