@@ -68,3 +68,65 @@ This is perfect for the cases when each time you execute a request you want to p
     ```
 
     User will only be prompted for `id` once when `yurl` encounters the path `/todos/{{ id }}`, once the value is entered it is saved in the variable set and reused in body.
+
+## Command Line Variables
+
+You can pass variables directly from command line using `-var` or `--variable` flag.
+
+```yaml title="http.yaml"
+requests:
+  UpdateTodo:
+    path: /todos/{{ id }}
+    method: PUT
+    jsonBody: |
+      {
+        "title": "{{ title }}"
+      }
+```
+
+```bash linenums="0"
+$ yurl -var id=10 UpdateTodo
+```
+
+You can pass as many variables as you want.
+
+```bash linenums="0"
+$ yurl -var id=10 -var title="Hello World" UpdateTodo
+```
+
+All the variables are added to the **variable set**.
+
+## Variables from a file
+
+You can define variables in a file and pass all of them at once using `-var-file` or `--variable-file`.
+
+Variables in the file need to follow the pattern: `key=value`.
+
+```text title="local.vars"
+email=test@test.com
+password=password
+```
+
+```yaml title="http.yaml"
+requests:
+  Login:
+    method: POST
+    path: /auth/login
+    jsonBody: |
+      {
+        "email": "{{ email }}",
+        "password": "{{ password }}"
+      }
+```
+
+```bash linenums="0"
+$ yurl -var-file local.vars Login
+```
+
+You can provide as many variable files as you want.
+
+```bash linenums="0"
+$ yurl -var-file local.vars -var-file staging.vars Login
+```
+
+All the variables are added to the **variable set**.
