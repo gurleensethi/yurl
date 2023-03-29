@@ -337,8 +337,6 @@ func (a *app) ExecuteRequest(ctx context.Context, request models.HttpRequestTemp
 }
 
 func (a *app) ListRequestVariables(ctx context.Context, request models.HttpRequestTemplate) error {
-	varTextStyle := styles.SecondaryText.Copy()
-
 	// Find variables in the path
 	pathVars := findVariables(request.Path)
 
@@ -346,7 +344,7 @@ func (a *app) ListRequestVariables(ctx context.Context, request models.HttpReque
 		fmt.Println(styles.PrimaryText.Render("Path"))
 
 		for _, pathVar := range pathVars {
-			fmt.Println(varTextStyle.Render("  " + pathVar))
+			fmt.Println("  " + pathVar)
 		}
 	}
 
@@ -360,7 +358,7 @@ func (a *app) ListRequestVariables(ctx context.Context, request models.HttpReque
 		fmt.Println(styles.PrimaryText.Render("Headers"))
 
 		for _, headerVar := range headerVars {
-			fmt.Println(varTextStyle.Render("  " + headerVar))
+			fmt.Println("  " + headerVar)
 		}
 	}
 
@@ -372,7 +370,7 @@ func (a *app) ListRequestVariables(ctx context.Context, request models.HttpReque
 		fmt.Println(styles.PrimaryText.Render("Body"))
 
 		for _, bodyVar := range bodyVars {
-			fmt.Println(varTextStyle.Render("  " + bodyVar))
+			fmt.Println("  " + bodyVar)
 		}
 	}
 
