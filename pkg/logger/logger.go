@@ -11,6 +11,16 @@ import (
 
 // LogRequest logs the request to the console.
 func LogHttpRequest(ctx context.Context, request *models.HttpRequest) {
+	if len(request.Variables) > 0 {
+		fmt.Println(styles.SectionHeader.Render("Variables"))
+		for key, value := range request.Variables {
+			name := styles.SecondaryText.Copy().Bold(true).Render(key)
+			varValue := styles.PrimaryText.Render(fmt.Sprintf("%v", value.Value))
+			source := value.Source
+			fmt.Printf("%s: (%s) %s\n", name, source, varValue)
+		}
+	}
+
 	fmt.Println(styles.SectionHeader.Render("Request"))
 
 	protocol := styles.Url.Render(request.RawRequest.Proto)

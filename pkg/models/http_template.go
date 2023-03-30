@@ -9,11 +9,11 @@ import (
 type VariableSource string
 
 const (
-	VariableSourceVarFile     VariableSource = "var-file"
-	VariableSourceRequestFile VariableSource = "request-file"
+	VariableSourceVarFile     VariableSource = "variable file"
+	VariableSourceRequestFile VariableSource = "request file"
 	VariableSourceCLI         VariableSource = "cli"
 	VariableSourceInput       VariableSource = "input"
-	VariableSourceExports     VariableSource = "request-exports"
+	VariableSourceExports     VariableSource = "request exports"
 )
 
 type Variable struct {
@@ -104,6 +104,7 @@ type HttpRequestTemplate struct {
 type HttpRequest struct {
 	Template   *HttpRequestTemplate
 	RawRequest *http.Request
+	Variables  Variables
 }
 
 type HttpResponse struct {

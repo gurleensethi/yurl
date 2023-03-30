@@ -536,6 +536,7 @@ func (a *app) buildRequest(ctx context.Context, request models.HttpRequestTempla
 	return &models.HttpRequest{
 		RawRequest: httpReq,
 		Template:   &request,
+		Variables:  vars,
 	}, nil
 }
 
