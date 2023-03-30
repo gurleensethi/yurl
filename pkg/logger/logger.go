@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/gurleensethi/yurl/pkg/models"
@@ -11,9 +12,19 @@ import (
 
 // LogRequest logs the request to the console.
 func LogHttpRequest(ctx context.Context, request *models.HttpRequest) {
+	// Print variables
 	if len(request.Variables) > 0 {
+		// Sort variables
+		keys := make([]string, 0, len(request.Variables))
+		for key := range request.Variables {
+			keys = append(keys, key)
+		}
+
+		sort.Strings(keys)
+
 		fmt.Println(styles.SectionHeader.Render("Variables"))
-		for key, value := range request.Variables {
+		for _, key := range keys {
+			value := request.Variables[key]
 			name := styles.SecondaryText.Copy().Bold(true).Render(key)
 			varValue := styles.PrimaryText.Render(fmt.Sprintf("%v", value.Value))
 			source := value.Source
@@ -54,6 +65,9 @@ func LogHttpResponse(ctx context.Context, httpResponse *models.HttpResponse) {
 		fmt.Println("  No exports")
 	}
 	for key, value := range httpResponse.Exports {
-		fmt.Println(key, ":", value)
+		key = styles.SecondaryText.Copy().Bold(true).Render(key)
+		value = styles.PrimaryText.Render(fmt.Sprintf("%v", value))
+
+		fmt.Printf("%s: %s\n", key, value)
 	}
 }
