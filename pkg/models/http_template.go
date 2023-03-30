@@ -81,6 +81,7 @@ type HttpRequestTemplate struct {
 	Body        string            `yaml:"body"`
 	JsonBody    string            `yaml:"jsonBody"`
 	Headers     map[string]string `yaml:"headers"`
+	Query       map[string]string `yaml:"query"`
 	PreRequests []PreRequest      `yaml:"pre"`
 	Exports     map[string]Export `yaml:"exports"`
 }

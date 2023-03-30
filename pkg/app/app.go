@@ -460,6 +460,20 @@ func (a *app) buildRequest(ctx context.Context, request models.HttpRequestTempla
 
 	reqURL.Scheme = a.HTTPTemplate.Config.Scheme
 
+	// Prepare query params
+	query := reqURL.Query()
+
+	for key, value := range request.Query {
+		replacedParam, err := replaceVariables(value, vars)
+		if err != nil {
+			return nil, err
+		}
+
+		query.Set(key, replacedParam)
+	}
+
+	reqURL.RawQuery = query.Encode()
+
 	// Prepare request body
 	body := ""
 	bodyContentType := ""
