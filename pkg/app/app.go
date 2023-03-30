@@ -47,12 +47,12 @@ Use a variable file
 
 type app struct {
 	HTTPTemplate models.HttpTemplate
-	FileVars     map[string]any
+	FileVars     models.Variables
 }
 
 func New() *app {
 	return &app{
-		FileVars: make(map[string]any),
+		FileVars: make(models.Variables),
 	}
 }
 
@@ -156,7 +156,13 @@ func (a *app) BuildCliApp() *cli.App {
 					for _, variable := range cliCtx.StringSlice("variable") {
 						parts := strings.Split(variable, "=")
 						if len(parts) >= 2 {
-							variables[parts[0]] = strings.Join(parts[1:], "=")
+							key := parts[0]
+							value := strings.Join(parts[1:], "=")
+
+							variables[key] = models.Variable{
+								Value:  value,
+								Source: models.VariableSourceCLI,
+							}
 						}
 					}
 
@@ -220,7 +226,12 @@ func (a *app) BuildCliApp() *cli.App {
 			for _, variable := range cliCtx.StringSlice("variable") {
 				parts := strings.Split(variable, "=")
 				if len(parts) >= 2 {
-					variables[parts[0]] = strings.Join(parts[1:], "=")
+					key := parts[0]
+					value := strings.Join(parts[1:], "=")
+					variables[key] = models.Variable{
+						Value:  value,
+						Source: models.VariableSourceCLI,
+					}
 				}
 			}
 
@@ -284,7 +295,12 @@ func (a *app) parseVariablesFromFiles(ctx context.Context, filePaths []string) e
 			line := string(lineBytes)
 			parts := strings.Split(line, "=")
 			if len(parts) >= 2 {
-				a.FileVars[parts[0]] = strings.Join(parts[1:], "=")
+				key := parts[0]
+				value := strings.Join(parts[1:], "=")
+				a.FileVars[key] = models.Variable{
+					Value:  value,
+					Source: models.VariableSourceVarFile,
+				}
 			}
 		}
 	}
@@ -316,7 +332,10 @@ func (a *app) ExecuteRequest(ctx context.Context, request models.HttpRequestTemp
 
 		// Merge the exports from the pre request to the vars
 		for key, value := range httpResponse.Exports {
-			vars[key] = value
+			vars[key] = models.Variable{
+				Value:  value,
+				Source: models.VariableSourceExports,
+			}
 		}
 
 		if opts.Verbose {

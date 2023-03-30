@@ -6,7 +6,22 @@ import (
 	"strings"
 )
 
-type Variables map[string]any
+type VariableSource string
+
+const (
+	VariableSourceVarFile     VariableSource = "var-file"
+	VariableSourceRequestFile VariableSource = "request-file"
+	VariableSourceCLI         VariableSource = "cli"
+	VariableSourceInput       VariableSource = "input"
+	VariableSourceExports     VariableSource = "request-exports"
+)
+
+type Variable struct {
+	Value  any
+	Source VariableSource
+}
+
+type Variables map[string]Variable
 
 type HttpTemplate struct {
 	Config   Config                         `yaml:"config"`

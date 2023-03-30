@@ -49,8 +49,8 @@ func replaceVariables(s string, vars models.Variables) (string, error) {
 		}
 
 		// Check if variable is present in vars
-		if value, ok := vars[key]; ok {
-			s = strings.ReplaceAll(s, match[0], fmt.Sprintf("%v", value))
+		if variable, ok := vars[key]; ok {
+			s = strings.ReplaceAll(s, match[0], fmt.Sprintf("%v", variable.Value))
 			continue
 		}
 
@@ -87,6 +87,12 @@ func replaceVariables(s string, vars models.Variables) (string, error) {
 		}
 
 		s = strings.ReplaceAll(s, match[0], input)
+
+		// Add variable to vars
+		vars[key] = models.Variable{
+			Value:  input,
+			Source: models.VariableSourceInput,
+		}
 	}
 
 	return s, nil
