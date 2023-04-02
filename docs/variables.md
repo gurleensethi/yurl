@@ -61,7 +61,7 @@ This is perfect for the cases when each time you execute a request you want to p
       GetTodo:
         path: /todos/{{ id }}
         method: PATCH
-        body: |
+        jsonBody: |
           {
             "id": {{ id }}
           }
