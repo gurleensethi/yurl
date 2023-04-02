@@ -59,3 +59,11 @@ We define a single request named `GetTodo` which will fetch a single todo by its
 ![](./media/quick-start/quick-start-2-user-input.gif)
 
 Learn more about variables [here](./variables.md).
+
+## List Requests
+
+We can list all the requests defined in the `http.yaml` file by running `yurl ls` command.
+
+```bash
+yurl ls
+```
