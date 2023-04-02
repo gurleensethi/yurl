@@ -67,3 +67,5 @@ We can list all the requests defined in the `http.yaml` file by running `yurl ls
 ```bash
 yurl ls
 ```
+
+![](./media/quick-start/quick-start-3-list-requests.gif)
