@@ -481,10 +481,15 @@ func (a *app) buildRequest(ctx context.Context, request models.HttpRequestTempla
 		return nil, err
 	}
 
-	rawURL := fmt.Sprintf("http://%s:%d%s", a.HTTPTemplate.Config.Host, a.HTTPTemplate.Config.Port, replacedPath)
-	reqURL, err := url.Parse(rawURL)
-	if err != nil {
-		return nil, err
+	host := a.HTTPTemplate.Config.Host
+	if a.HTTPTemplate.Config.Port != 0 {
+		host = fmt.Sprintf("%s:%d", host, a.HTTPTemplate.Config.Port)
+	}
+
+	reqURL := url.URL{
+		Host:   host,
+		Scheme: a.HTTPTemplate.Config.Scheme,
+		Path:   replacedPath,
 	}
 
 	reqURL.Scheme = a.HTTPTemplate.Config.Scheme
