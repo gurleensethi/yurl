@@ -22,6 +22,8 @@ import (
 )
 
 var (
+	Version = "v0.3.0"
+
 	DefaultHTTPYamlFile = "http.yaml"
 
 	UsageText = `
@@ -90,6 +92,14 @@ func (a *app) BuildCliApp() *cli.App {
 			},
 		},
 		Commands: []*cli.Command{
+			{
+				Name:  "version",
+				Usage: "print the version of yurl",
+				Action: func(c *cli.Context) error {
+					fmt.Println(Version)
+					return nil
+				},
+			},
 			{
 				Name:    "list-requests",
 				Aliases: []string{"ls"},
