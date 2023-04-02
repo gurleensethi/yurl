@@ -3,7 +3,7 @@ package styles
 import "github.com/charmbracelet/lipgloss"
 
 var (
-	ColorBlue   = lipgloss.AdaptiveColor{Dark: "#65BFCC", Light: "#23a3b1"}
+	ColorBlue   = lipgloss.AdaptiveColor{Dark: "#65BFCC", Light: "#00008b"}
 	ColorPurple = lipgloss.AdaptiveColor{Dark: "#CF58D8", Light: "#be02bf"}
 	ColorGray   = lipgloss.AdaptiveColor{Dark: "#B2B2B2", Light: "#000000"}
 
