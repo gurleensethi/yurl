@@ -11,3 +11,15 @@ tasks:
       IMAGE_TAG: "{{.IMAGE_TAG}}"
     cmds:
       - docker build -t {{ .IMAGE_NAME | default "yurl" }}:{{ .IMAGE_TAG | default "latest" }} .
+
+  generate-vhs-tapes:
+    silent: true
+    vars:
+      TAPE_FILES:
+        sh: ls ./docs/vhs-tapes/*.tape | xargs
+    cmds:
+      - |
+        {{ range $i, $line := .TAPE_FILES | splitList " " }}
+          echo Generating: {{ $line }}
+          vhs {{ $line }}
+        {{- end -}}
