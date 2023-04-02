@@ -51,5 +51,7 @@ theme:
 nav:
   - Home: index.md
   - Installation: installation.md
+  - Quick Start: quick-start.md
   - Variables: variables.md
+  - Request: request.md
   - Examples: examples.md
