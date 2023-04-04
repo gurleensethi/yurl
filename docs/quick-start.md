@@ -32,7 +32,7 @@ yurl ListTodos
 
 `yurl` by default detects the `http.yaml` file and executes the `ListTodos` request.
 
-![](./media/quick-start/quick-start-1-basic.gif)
+![](./media/quick-start/quick-start-basic.gif)
 
 ## Request with user input
 
@@ -56,9 +56,19 @@ requests:
 
 We define a single request named `GetTodo` which will fetch a single todo by its id. We use variables to get the `id` from the user.
 
-![](./media/quick-start/quick-start-2-user-input.gif)
+![](./media/quick-start/quick-start-user-input.gif)
 
 Learn more about variables [here](./variables.md).
+
+## Verbose Mode
+
+You can run the requests in verbose mode by passing the `-v` flag.
+
+```bash
+yurl -v GetTodo
+```
+
+![](./media/quick-start/quick-start-verbose-mode.gif)
 
 ## List Requests
 
@@ -68,4 +78,4 @@ We can list all the requests defined in the `http.yaml` file by running `yurl ls
 yurl ls
 ```
 
-![](./media/quick-start/quick-start-3-list-requests.gif)
+![](./media/quick-start/quick-start-list-requests.gif)

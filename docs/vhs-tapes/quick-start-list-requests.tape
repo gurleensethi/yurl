@@ -1,4 +1,4 @@
-Output docs/media/quick-start/quick-start-3-list-requests.gif
+Output docs/media/quick-start/quick-start-list-requests.gif
 
 Set TypingSpeed 0.2
 Set PlaybackSpeed 0.5
