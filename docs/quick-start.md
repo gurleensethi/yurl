@@ -79,3 +79,72 @@ yurl ls
 ```
 
 ![](./media/quick-start/quick-start-list-requests.gif)
+
+## Post Request with JSON Body
+
+Let's define a request to create a new todo. We will use the `POST` method and pass a JSON body as the payload.
+
+```yaml title="http.yaml" hl_lines="15-21"
+config:
+  host: jsonplaceholder.typicode.com
+  port: 443
+  scheme: https
+
+requests:
+  ListTodos:
+    method: GET
+    path: /todos
+
+  GetTodo:
+    method: GET
+    path: /todos/{{ id }}
+
+  CreateTodo:
+    method: POST
+    path: /todos/
+    jsonBody: |
+      {
+        "title": "{{ title }}"
+      }
+```
+
+![](./media/quick-start/quick-start-post-request.gif)
+
+`jsonBody` automatically sets the `Content-Type` header to `application/json`.
+
+## Enforcing types on user input variables
+
+We can enforce types on user input variables by specifying the type following the format `<varname:type>`.
+
+```yaml title="http.yaml" hl_lines="21"
+config:
+  host: jsonplaceholder.typicode.com
+  port: 443
+  scheme: https
+
+requests:
+  ListTodos:
+    method: GET
+    path: /todos
+
+  GetTodo:
+    method: GET
+    path: /todos/{{ id }}
+
+  CreateTodo:
+    method: POST
+    path: /todos/
+    jsonBody: |
+      {
+        "title": "{{ title }}",
+        "userId": "{{ userId:int }}
+      }
+```
+
+Type of variable is displayed in the prompt.
+
+![](./media/quick-start/quick-start-type-enforcement.gif)
+
+If the user enters a value of a different type, the request will fail.
+
+![](./media/quick-start/quick-start-type-enforcement-fail.gif)

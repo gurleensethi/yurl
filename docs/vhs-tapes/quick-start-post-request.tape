@@ -1,4 +1,4 @@
-Output docs/media/quick-start/quick-start-verbose-mode.gif
+Output docs/media/quick-start/quick-start-post-request.gif
 
 Set TypingSpeed 0.2
 Set PlaybackSpeed 0.5
@@ -7,9 +7,9 @@ Set FontSize 32
 Set Width 1600
 Set Height 1000
 
-Type "yurl -v GetTodo"
+Type "yurl CreateTodo"
 Enter
 Sleep 1s
-Type "10"
+Type "New Todo"
 Enter
-Sleep 10s
+Sleep 5s
