@@ -444,8 +444,8 @@ func (a *app) executeRequest(ctx context.Context, requestTemplate models.HttpReq
 
 	for name, export := range requestTemplate.Exports {
 		if export.JSON != "" {
-			var parsedBody map[string]any
-			exportsErr = json.Unmarshal([]byte(bodyBytes), &parsedBody)
+			var parsedBody interface{}
+			exportsErr = json.Unmarshal(bodyBytes, &parsedBody)
 			if err != nil {
 				exportsErr = err
 				break
