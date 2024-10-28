@@ -1,0 +1,31 @@
+config:
+  host: jsonplaceholder.typicode.com
+  port: 443
+  scheme: https
+
+requests:
+  ListTodos:
+    method: GET
+    path: /todos
+    exports:
+      id:
+        json: $[0].userId
+
+  GetTodo:
+    method: GET
+    path: /todos/{{ id:int }}
+
+  GetFirstTodo:
+    method: GET
+    path: /todos/{{ id:int }}
+    pre:
+      - name: ListTodos
+
+  CreateTodo:
+    method: POST
+    path: /todos/
+    jsonBody: |
+      {
+        "title": "{{ title }}",
+        "userId": {{ userId:int }}
+      }

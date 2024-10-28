@@ -1,4 +1,4 @@
-package app
+package cli
 
 import (
 	"bufio"
@@ -13,7 +13,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gurleensethi/yurl/pkg/logger"
+	"github.com/gurleensethi/yurl/internal/logger"
 	"github.com/gurleensethi/yurl/pkg/models"
 	"github.com/gurleensethi/yurl/pkg/styles"
 	"github.com/urfave/cli/v2"
@@ -48,17 +48,19 @@ Use a variable file
 )
 
 type app struct {
+	// HTTPTemplate represents main config file for yurl.
 	HTTPTemplate models.HttpTemplate
-	FileVars     models.Variables
+
+	FileVars models.Variables
 }
 
-func New() *app {
+func NewApp() *app {
 	return &app{
 		FileVars: make(models.Variables),
 	}
 }
 
-func (a *app) BuildCliApp() *cli.App {
+func (a *app) Build() *cli.App {
 	return &cli.App{
 		Name:        "yurl",
 		Description: "Write your http requests in yaml.",
@@ -92,6 +94,17 @@ func (a *app) BuildCliApp() *cli.App {
 			},
 		},
 		Commands: []*cli.Command{
+			{
+				Name:  "init",
+				Usage: "Init a new config file",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "path",
+						Usage: "destination to initalize new configuration at",
+					},
+				},
+				Action: InitConfigFile,
+			},
 			{
 				Name:  "version",
 				Usage: "print the version of yurl",
@@ -192,6 +205,12 @@ func (a *app) BuildCliApp() *cli.App {
 			},
 		},
 		Before: func(cliCtx *cli.Context) error {
+			// Don't try to load http.yaml file if command is an
+			// initialization command.
+			if cliCtx.NArg() >= 1 && cliCtx.Args().First() == "init" {
+				return nil
+			}
+
 			filePath := cliCtx.String("file")
 			if filePath == "" {
 				filePath = DefaultHTTPYamlFile
@@ -259,7 +278,7 @@ func (a *app) BuildCliApp() *cli.App {
 	}
 }
 
-func (a *app) parseHTTPYamlFile(ctx context.Context, filePath string) error {
+func (a *app) parseHTTPYamlFile(_ context.Context, filePath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		if err == os.ErrNotExist {

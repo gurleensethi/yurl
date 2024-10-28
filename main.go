@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gurleensethi/yurl/pkg/app"
+	"github.com/gurleensethi/yurl/internal/cli"
 )
 
 func main() {
-	err := app.New().BuildCliApp().Run(os.Args)
+	err := cli.NewApp().Build().Run(os.Args)
 	if err != nil {
 		if os.Getenv("DEBUG") == "true" {
 			panic(err)
