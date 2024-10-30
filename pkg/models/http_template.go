@@ -27,14 +27,34 @@ func (t *HttpTemplate) Validate() error {
 		return err
 	}
 
+	// DFS to check any cycles on pre requests
 	for _, request := range t.Requests {
-		err := request.Validate(t)
-		if err != nil {
-			return err
+		if ok, requestChain := t.findPreRequestCycles(request.Name, make([]string, 0), make(map[string]struct{})); ok {
+			return fmt.Errorf("cycle detected in pre-requests: %s", strings.Join(requestChain, " -> "))
 		}
 	}
 
 	return nil
+}
+
+// findPreRequestCycles checks if there are any cycles in pre request chain.
+func (t *HttpTemplate) findPreRequestCycles(requestName string, requestChain []string, visited map[string]struct{}) (bool, []string) {
+	request := t.Requests[requestName]
+	visited[requestName] = struct{}{}
+	requestChain = append(requestChain, requestName)
+
+	for _, preRequest := range request.PreRequests {
+		if _, ok := visited[preRequest.Name]; ok {
+			return true, append(requestChain, preRequest.Name)
+		}
+
+		isCycleDetected, requestChain := t.findPreRequestCycles(preRequest.Name, requestChain, visited)
+		if isCycleDetected {
+			return true, requestChain
+		}
+	}
+
+	return false, nil
 }
 
 type Config struct {
@@ -104,15 +124,4 @@ func (r *HttpRequestTemplate) Sanitize() {
 	if r.Path == "" {
 		r.Path = "/"
 	}
-}
-
-func (r *HttpRequestTemplate) Validate(httpTemplate *HttpTemplate) error {
-	// Validate existence of pre requests
-	for _, preRequest := range r.PreRequests {
-		if _, ok := httpTemplate.Requests[preRequest.Name]; !ok {
-			return fmt.Errorf("'%s' requires a pre request '%s' which is not defined", r.Name, preRequest.Name)
-		}
-	}
-
-	return nil
 }

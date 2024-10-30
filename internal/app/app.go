@@ -84,11 +84,6 @@ func (a *App) ExecuteRequest(ctx context.Context, requestName string, opts Execu
 
 	request.Sanitize()
 
-	err := request.Validate(&a.HTTPTemplate)
-	if err != nil {
-		return err
-	}
-
 	if opts.ListVariables {
 		err := a.ListRequestVariables(ctx, request)
 		if err != nil {

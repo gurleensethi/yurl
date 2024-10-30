@@ -23,6 +23,10 @@ type Variable struct {
 
 type Variables map[string]Variable
 
+func NewVariables() Variables {
+	return make(Variables)
+}
+
 func (vars Variables) Add(v Variable) {
 	vars[v.Key] = v
 }

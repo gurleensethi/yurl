@@ -41,6 +41,15 @@ Use a variable file
 	ErrParsingExports = errors.New("error parsing exports")
 )
 
+const (
+	FlagVerbose       = "verbose"
+	FlagVariable      = "variable"
+	FlagVariableFile  = "variable-file"
+	FlagFile          = "file"
+	FlagListVariables = "list-variables"
+	FlagPath          = "path"
+)
+
 type CliApp struct {
 	app *app.App
 }
@@ -57,27 +66,27 @@ func (a *CliApp) Build() *cli.App {
 		UsageText:   UsageText,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:    "verbose",
+				Name:    FlagVerbose,
 				Aliases: []string{"v"},
 				Usage:   "verbose output",
 			},
 			&cli.StringSliceFlag{
-				Name:    "variable",
+				Name:    FlagVariable,
 				Usage:   "variable to be used in the request. ",
 				Aliases: []string{"var"},
 			},
 			&cli.StringSliceFlag{
-				Name:    "variable-file",
+				Name:    FlagVariableFile,
 				Usage:   "loads variables from the given file.",
 				Aliases: []string{"var-file"},
 			},
 			&cli.StringFlag{
-				Name:    "file",
+				Name:    FlagFile,
 				Usage:   "path of file to read http requests from",
 				Aliases: []string{"f"},
 			},
 			&cli.BoolFlag{
-				Name:    "list-variables",
+				Name:    FlagListVariables,
 				Usage:   "list all variables in the request",
 				Aliases: []string{"lv", "list-vars"},
 			},
@@ -88,7 +97,7 @@ func (a *CliApp) Build() *cli.App {
 				Usage: "Init a new config file",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "path",
+						Name:  FlagPath,
 						Usage: "destination to initalize new configuration at",
 					},
 				},
@@ -200,7 +209,7 @@ func (a *CliApp) Build() *cli.App {
 				return nil
 			}
 
-			filePath := cliCtx.String("file")
+			filePath := cliCtx.String(FlagFile)
 			if filePath == "" {
 				filePath = DefaultHTTPYamlFile
 			}
@@ -217,7 +226,7 @@ func (a *CliApp) Build() *cli.App {
 				return err
 			}
 
-			variablesFilePaths := cliCtx.StringSlice("variable-file")
+			variablesFilePaths := cliCtx.StringSlice(FlagVariableFile)
 
 			fileVariables, err := a.parseVariablesFromFiles(cliCtx.Context, variablesFilePaths)
 			if err != nil {
@@ -234,10 +243,10 @@ func (a *CliApp) Build() *cli.App {
 				return nil
 			}
 
-			var cliVariables = make(variable.Variables)
+			cliVariables := variable.NewVariables()
 
 			// Parse variables from command line
-			for _, v := range cliCtx.StringSlice("variable") {
+			for _, v := range cliCtx.StringSlice(FlagVariable) {
 				parsedVariable, err := variable.ParseStringWithSource(v, variable.SourceCLI)
 				if err != nil && !errors.As(err, &variable.ErrInvalidFormat{}) {
 					return err
@@ -248,8 +257,8 @@ func (a *CliApp) Build() *cli.App {
 			requestName := cliCtx.Args().First()
 
 			return a.app.ExecuteRequest(cliCtx.Context, requestName, app.ExecuteRequestOpts{
-				ListVariables: cliCtx.Bool("list-variables"),
-				Verbose:       cliCtx.Bool("verbose"),
+				ListVariables: cliCtx.Bool(FlagListVariables),
+				Verbose:       cliCtx.Bool(FlagVerbose),
 				Variables:     cliVariables,
 			})
 		},
@@ -281,8 +290,8 @@ func (a *CliApp) parseHTTPYamlFile(_ context.Context, filePath string) (*models.
 	return &template, nil
 }
 
-func (a *CliApp) parseVariablesFromFiles(ctx context.Context, filePaths []string) (variable.Variables, error) {
-	var variables = make(variable.Variables)
+func (a *CliApp) parseVariablesFromFiles(_ context.Context, filePaths []string) (variable.Variables, error) {
+	variables := variable.NewVariables()
 
 	for _, filePath := range filePaths {
 		file, err := os.Open(filePath)
