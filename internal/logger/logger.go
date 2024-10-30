@@ -54,10 +54,16 @@ func LogHttpResponse(ctx context.Context, httpResponse *models.HttpResponse) {
 	status := styles.Url.Render(httpResponse.RawResponse.Status)
 	fmt.Println(protocol, status)
 
+	// Headers
+	if len(httpResponse.RawResponse.Header) > 0 {
+		fmt.Println()
+	}
 	for key, value := range httpResponse.RawResponse.Header {
 		fmt.Printf("%s: %s\n", styles.HeaderName.Render(key), strings.Join(value, "; "))
 	}
-	fmt.Println(string(httpResponse.RawBody))
+
+	// Body
+	fmt.Println("\n" + string(httpResponse.RawBody))
 
 	fmt.Println(styles.SectionHeader.Render("Exports"))
 

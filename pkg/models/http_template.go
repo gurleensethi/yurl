@@ -4,24 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/gurleensethi/yurl/internal/variable"
 )
-
-type VariableSource string
-
-const (
-	VariableSourceVarFile     VariableSource = "variable file"
-	VariableSourceRequestFile VariableSource = "request file"
-	VariableSourceCLI         VariableSource = "cli"
-	VariableSourceInput       VariableSource = "input"
-	VariableSourceExports     VariableSource = "request exports"
-)
-
-type Variable struct {
-	Value  any
-	Source VariableSource
-}
-
-type Variables map[string]Variable
 
 type HttpTemplate struct {
 	Config   Config                         `yaml:"config"`
@@ -100,7 +85,7 @@ type HttpRequestTemplate struct {
 type HttpRequest struct {
 	Template   *HttpRequestTemplate
 	RawRequest *http.Request
-	Variables  Variables
+	Variables  variable.Variables
 }
 
 type HttpResponse struct {

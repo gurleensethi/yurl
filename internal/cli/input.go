@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gurleensethi/yurl/pkg/models"
+	"github.com/gurleensethi/yurl/internal/variable"
 	"github.com/gurleensethi/yurl/pkg/styles"
 )
 
@@ -35,7 +35,7 @@ func findVariables(s string) []string {
 	return vars
 }
 
-func replaceVariables(s string, vars models.Variables) (string, error) {
+func replaceVariables(s string, vars variable.Variables) (string, error) {
 	matches := inputRegex.FindAllStringSubmatch(s, -1)
 	if len(matches) == 0 {
 		return s, nil
@@ -89,9 +89,9 @@ func replaceVariables(s string, vars models.Variables) (string, error) {
 		s = strings.ReplaceAll(s, match[0], input)
 
 		// Add variable to vars
-		vars[key] = models.Variable{
+		vars[key] = variable.Variable{
 			Value:  input,
-			Source: models.VariableSourceInput,
+			Source: variable.SourceInput,
 		}
 	}
 
