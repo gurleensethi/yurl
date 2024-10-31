@@ -251,15 +251,15 @@ func (a *CliApp) Build() *cli.App {
 				if err != nil && !errors.As(err, &variable.ErrInvalidFormat{}) {
 					return err
 				}
+
 				cliVariables.Add(parsedVariable)
 			}
 
 			requestName := cliCtx.Args().First()
 
 			return a.app.ExecuteRequest(cliCtx.Context, requestName, app.ExecuteRequestOpts{
-				ListVariables: cliCtx.Bool(FlagListVariables),
-				Verbose:       cliCtx.Bool(FlagVerbose),
-				Variables:     cliVariables,
+				Verbose:   cliCtx.Bool(FlagVerbose),
+				Variables: cliVariables,
 			})
 		},
 	}

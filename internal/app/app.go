@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -46,9 +47,8 @@ func New(template models.HttpTemplate, vars variable.Variables) *App {
 }
 
 type ExecuteRequestOpts struct {
-	ListVariables bool
-	Variables     variable.Variables
-	Verbose       bool
+	Variables variable.Variables
+	Verbose   bool
 }
 
 func (a *App) ListRequests(ctx context.Context) error {
@@ -66,7 +66,7 @@ func (a *App) ListRequests(ctx context.Context) error {
 		description := styles.Description.Render(request.Description)
 
 		fmt.Println(name, description)
-		fmt.Println("  ", styles.Url.Copy().Bold(false).Render(request.Method+" "+request.Path))
+		fmt.Println("  ", styles.Url.Bold(false).Render(request.Method+" "+request.Path))
 
 		if i < len(keys)-1 {
 			fmt.Println()
@@ -84,47 +84,98 @@ func (a *App) ExecuteRequest(ctx context.Context, requestName string, opts Execu
 
 	request.Sanitize()
 
-	if opts.ListVariables {
-		err := a.ListRequestVariables(ctx, request)
-		if err != nil {
-			return err
-		}
+	requestExecutionChain := a.getRequestExecutionChain(request)
 
-		return nil
-	}
+	// We store response of each request
+	responses := make(map[string]*models.HttpResponse)
 
-	vars := opts.Variables
+	for i, request := range requestExecutionChain {
+		vars := opts.Variables
 
-	// Execute all the pre required requests
-	for _, preRequest := range request.PreRequests {
-		_, httpResponse, err := a.executeRequest(ctx, a.HTTPTemplate.Requests[preRequest.Name], vars, opts.Verbose)
-		if err != nil {
-			return err
-		}
-
-		// Merge the exports from the pre request to the vars
-		for key, value := range httpResponse.Exports {
-			vars[key] = variable.Variable{
-				Value:  value,
-				Source: variable.SourceExports,
+		// For all pre-requests required by this request, add exported variables to vars.
+		for _, preRequest := range request.PreRequests {
+			if preRequestResponse, ok := responses[preRequest.Name]; ok {
+				for key, value := range preRequestResponse.Exports {
+					vars.Add(variable.Variable{
+						Key:    key,
+						Value:  value,
+						Source: variable.SourceExports,
+					})
+				}
 			}
 		}
 
-		if opts.Verbose {
+		_, response, err := a.executeRequest(ctx, request, vars, opts.Verbose)
+		if err != nil {
+			return err
+		}
+
+		responses[request.Name] = response
+
+		isFirstOrLast := i == 0 || i == len(requestExecutionChain)-1
+		if opts.Verbose && !isFirstOrLast {
 			fmt.Println(styles.Divider.Render("------------------------------------------------------------------------------"))
 		}
 	}
 
-	_, response, err := a.executeRequest(ctx, request, vars, opts.Verbose)
-	if err != nil {
-		return err
+	if !opts.Verbose {
+		fmt.Println(string(responses[request.Name].RawBody))
 	}
 
-	if !opts.Verbose {
-		fmt.Println(string(response.RawBody))
-	}
+	// vars := opts.Variables
+
+	// // Execute all the pre required requests
+	// for _, preRequest := range request.PreRequests {
+	// 	_, httpResponse, err := a.executeRequest(ctx, a.HTTPTemplate.Requests[preRequest.Name], vars, opts.Verbose)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+
+	// 	// Merge the exports from the pre request to the vars
+	// 	for key, value := range httpResponse.Exports {
+	// 		vars[key] = variable.Variable{
+	// 			Value:  value,
+	// 			Source: variable.SourceExports,
+	// 		}
+	// 	}
+
+	// 	if opts.Verbose {
+	// 		fmt.Println(styles.Divider.Render("------------------------------------------------------------------------------"))
+	// 	}
+	// }
+
+	// _, response, err := a.executeRequest(ctx, request, vars, opts.Verbose)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// if !opts.Verbose {
+	// 	fmt.Println(string(response.RawBody))
+	// }
 
 	return nil
+}
+
+func (a *App) getRequestExecutionChain(requestTemplate models.HttpRequestTemplate) []models.HttpRequestTemplate {
+	var queue = []string{requestTemplate.Name}
+	var chain = []models.HttpRequestTemplate{}
+
+	for len(queue) > 0 {
+		requestName := queue[0]
+		queue = queue[1:]
+
+		request := a.HTTPTemplate.Requests[requestName]
+		chain = append(chain, request)
+
+		// Process all pre-requests
+		for _, preRequest := range request.PreRequests {
+			queue = append(queue, preRequest.Name)
+		}
+	}
+
+	slices.Reverse(chain)
+
+	return chain
 }
 
 func (a *App) executeRequest(ctx context.Context, requestTemplate models.HttpRequestTemplate, vars variable.Variables, verbose bool) (*http.Request, *models.HttpResponse, error) {
